@@ -132,6 +132,13 @@ pub async fn fetch(client: &reqwest::Client, job: &Job, progress: &Progress) -> 
     Err(last.unwrap())
 }
 
+/// يزيل المهام المكررة لنفس الوجهة. ضروري: فهرس assets يربط أسماء كثيرة بنفس الـ hash،
+/// وتنزيلها بالتوازي إلى نفس ملف `.part` يسبب سباقاً (Range خاطئ/ملف تالف).
+pub fn dedupe_jobs(jobs: Vec<Job>) -> Vec<Job> {
+    let mut seen = std::collections::HashSet::new();
+    jobs.into_iter().filter(|j| seen.insert(j.dest.clone())).collect()
+}
+
 /// ينزّل مجموعة ملفات بتوازي محدود (الافتراضي 16).
 pub async fn fetch_all(
     client: &reqwest::Client,
@@ -139,6 +146,7 @@ pub async fn fetch_all(
     progress: Arc<Progress>,
     concurrency: usize,
 ) -> Result<()> {
+    let jobs = dedupe_jobs(jobs);
     progress.files_total.fetch_add(jobs.len() as u64, Ordering::Relaxed);
     progress
         .total_bytes
@@ -170,6 +178,13 @@ pub async fn fetch_all(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dedupe_removes_same_destination() {
+        let j = |u: &str, d: &str| Job { url: u.into(), dest: d.into(), sha1: None, size: None };
+        let out = dedupe_jobs(vec![j("a", "/x/1"), j("a", "/x/1"), j("b", "/x/2")]);
+        assert_eq!(out.len(), 2);
+    }
 
     #[tokio::test]
     async fn sha1_and_validity() {

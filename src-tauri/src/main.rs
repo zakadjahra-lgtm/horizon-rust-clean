@@ -24,6 +24,8 @@ struct AppState {
     manifest: Mutex<Option<Manifest>>,
     /// instances مشغولة (تثبيت/تشغيل) لمنع عمليتين متزامنتين على نفس المجلد.
     busy: Mutex<HashSet<String>>,
+    /// تثبيت واحد في كل مرة: instances مختلفة تشترك في ملفات `shared/` ولا يجوز تنزيلها معاً.
+    install_lock: Mutex<()>,
 }
 
 fn es<E: std::fmt::Display>(e: E) -> String {
@@ -131,6 +133,7 @@ fn manual_java(inst: &Instance, st: &AppState) -> Option<String> {
 }
 
 async fn do_install(app: &AppHandle, st: &AppState, id: &str) -> Result<(), String> {
+    let _one_at_a_time = st.install_lock.lock().await;
     let inst = instance::load(&st.data, id).map_err(es)?;
     let shared = st.data.join("shared");
     let manifest = get_manifest(st).await?;
@@ -349,6 +352,7 @@ fn main() {
         data: data_dir(),
         manifest: Mutex::new(None),
         busy: Mutex::new(HashSet::new()),
+        install_lock: Mutex::new(()),
     };
     tauri::Builder::default()
         .manage(state)
