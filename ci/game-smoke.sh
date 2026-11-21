@@ -33,6 +33,8 @@ for server in xorg xvfb xvnc; do
   command -v "$(case $server in xorg) echo Xorg;; xvfb) echo Xvfb;; *) echo Xvnc;; esac)" >/dev/null || { echo "skip $server (not installed)"; continue; }
   echo "=== attempt with $server ==="
   start_server "$server" || { echo "$server did not start"; kill $SRV 2>/dev/null; continue; }
+  xdpyinfo 2>&1 | grep -iE "vendor string|RANDR|GLX|dimensions" | sed 's/^/  xdpyinfo: /'
+  xrandr --query 2>&1 | head -4 | sed 's/^/  xrandr: /'
   "$ROOT/target/release/hrc-cli" launch "$VER" Player 1536 > "$LOG" 2>&1 &
   GP=$!
   for i in $(seq 1 $((MAXW/5))); do
@@ -50,6 +52,16 @@ for server in xorg xvfb xvnc; do
   echo "$server: did not reach HUD frame"; grep -aE "Exception|Error" "$LOG" | head -3
   sleep 2
 done
+
+if [ $reached = 0 ]; then
+  echo "=== baseline WITHOUT agent (xvfb) to isolate the cause ==="
+  if start_server xvfb; then
+    env -u HRC_EXTRA_JVM "$ROOT/target/release/hrc-cli" launch "$VER" Player 1536 > "$OUT/$VER-baseline.log" 2>&1 &
+    BP=$!; sleep 30
+    grep -aE "ArrayIndexOutOfBounds|Setting user|LWJGL Version|Game crashed|OpenGL" "$OUT/$VER-baseline.log" | head -6 | sed 's/^/  baseline: /'
+    pkill -f "net.minecraft" 2>/dev/null; kill $BP $SRV 2>/dev/null; pkill -f hrc-cli 2>/dev/null
+  fi
+fi
 
 echo "---- log tail ----"; tail -n 30 "$LOG"
 echo "---- checks ----"
