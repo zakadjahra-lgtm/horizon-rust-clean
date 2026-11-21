@@ -33,6 +33,30 @@ jobs:
           name: hrc-cli-windows
           path: target/release/hrc-cli.exe
 
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows-exe, install-smoke]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: hrc-cli-windows
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" hrc-cli.exe \
+            --repo "${{ github.repository }}" \
+            --title "Horizon Rust Clean ${{ github.ref_name }} (تجريبي)" \
+            --prerelease \
+            --notes "نسخة تجريبية مبكرة: **أداة سطر أوامر فقط** (بدون واجهة رسومية).
+          ✅ مُختبَر: اختبارات الوحدة، وتثبيت 1.8.9 / 1.12.2 / 1.16.5 / 1.20.1 مع SHA1.
+          ⚠️ غير مُختبَر بعد: تشغيل اللعبة فعلياً (launch)، وتنزيل Java Runtime.
+          الاستخدام: hrc-cli.exe list | install 1.8.9 | launch 1.8.9 Steve 2048
+          التفاصيل في README.md و STATUS.md."
+
   # اختبار حقيقي: تثبيت الإصدار وبناء أمر التشغيل (بدون تشغيل اللعبة لأن السيرفر بلا شاشة)
   install-smoke:
     needs: test
