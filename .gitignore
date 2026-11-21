@@ -1,0 +1,6 @@
+/target
+node_modules
+dist
+*.part
+hrc-data/
+.DS_Store

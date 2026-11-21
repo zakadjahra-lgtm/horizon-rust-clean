@@ -1,0 +1,48 @@
+name: Build & Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Unit tests
+        run: cargo test --workspace --all-targets
+
+  windows-exe:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build CLI (release)
+        run: cargo build --release -p hrc-cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hrc-cli-windows
+          path: target/release/hrc-cli.exe
+
+  # اختبار حقيقي: تثبيت الإصدار وبناء أمر التشغيل (بدون تشغيل اللعبة لأن السيرفر بلا شاشة)
+  install-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.8.9", "1.12.2", "1.16.5", "1.20.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo run --release -p hrc-cli -- install ${{ matrix.version }}
