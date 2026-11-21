@@ -1,0 +1,43 @@
+name: Probe tool versions
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Minecraft manifest
+        run: |
+          curl -fsS https://piston-meta.mojang.com/mc/game/version_manifest_v2.json -o m.json
+          echo "LATEST: $(jq -c .latest m.json)"
+          echo "TOP RELEASES:"; jq -r '[.versions[]|select(.type=="release")][0:6][]|"\(.id) \(.releaseTime)"' m.json
+      - name: Fabric meta (modern)
+        run: |
+          echo "FABRIC GAME (stable top5):"; curl -fsS https://meta.fabricmc.net/v2/versions/game | jq -r '[.[]|select(.stable)][0:5][]|.version'
+          echo "FABRIC LOADER (stable top3):"; curl -fsS https://meta.fabricmc.net/v2/versions/loader | jq -r '[.[]|select(.stable)][0:3][]|.version'
+          echo "YARN 1.20.1:"; curl -fsS https://meta.fabricmc.net/v2/versions/yarn/1.20.1 | jq -r '.[0].version'
+          echo "LOADER PROFILE 1.20.1 head:"; L=$(curl -fsS https://meta.fabricmc.net/v2/versions/loader | jq -r '[.[]|select(.stable)][0].version'); curl -fsS "https://meta.fabricmc.net/v2/versions/loader/1.20.1/$L/profile/json" | jq -c '{id,inheritsFrom,mainClass,libs:(.libraries|length)}'
+      - name: Maven metadata (Loom, Fabric API)
+        run: |
+          for p in net/fabricmc/fabric-loom net/fabricmc/fabric-loom-remap net/fabricmc/fabric-api/fabric-api; do
+            echo "== $p"; curl -fsS "https://maven.fabricmc.net/$p/maven-metadata.xml" | grep -E "<latest>|<release>" || echo "(no metadata)"
+          done
+          echo "== fabric-api versions for 1.20.1 (last 3) / 26.x (last 5)"
+          curl -fsS https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | grep -oE "<version>[^<]+</version>" | sed 's/<[^>]*>//g' > fa.txt
+          grep -E "\+1\.20\.1$" fa.txt | tail -3; grep -E "\+26\." fa.txt | tail -5
+          echo "== plugin markers"
+          for m in net.fabricmc.fabric-loom net.fabricmc.fabric-loom-remap fabric-loom; do
+            printf "$m: "; curl -fsS "https://maven.fabricmc.net/$(echo $m | tr . /)/$m.gradle.plugin/maven-metadata.xml" 2>/dev/null | grep -E "<latest>" || echo "n/a"
+          done
+      - name: Legacy Fabric
+        run: |
+          echo "LEGACY GAME:"; curl -fsS https://meta.legacyfabric.net/v2/versions/game | jq -c '[.[]|.version]|map(select(.=="1.8.9"))'
+          echo "LEGACY LOADER:"; curl -fsS https://meta.legacyfabric.net/v2/versions/loader | jq -r '[.[]|select(.stable)][0:3][]|.version'
+          echo "LEGACY YARN 1.8.9:"; curl -fsS https://meta.legacyfabric.net/v2/versions/yarn/1.8.9 | jq -r '.[0:2][]|.version'
+          L=$(curl -fsS https://meta.legacyfabric.net/v2/versions/loader | jq -r '[.[]|select(.stable)][0].version'); echo "LEGACY PROFILE:"; curl -fsS "https://meta.legacyfabric.net/v2/versions/loader/1.8.9/$L/profile/json" | jq -c '{id,inheritsFrom,mainClass,libs:(.libraries|length)}'
+      - name: Legacy Fabric example mod build files
+        run: |
+          for f in build.gradle gradle.properties settings.gradle gradle/wrapper/gradle-wrapper.properties; do
+            echo "===== $f"; curl -fsS "https://raw.githubusercontent.com/Legacy-Fabric/fabric-example-mod/main/$f" || curl -fsS "https://raw.githubusercontent.com/Legacy-Fabric/fabric-example-mod/master/$f" || echo "(not found)"
+          done
+      - name: Java versions available
+        run: ls /usr/lib/jvm; xvfb-run --help >/dev/null 2>&1 && echo "xvfb present" || echo "xvfb absent"
