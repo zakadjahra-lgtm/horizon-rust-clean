@@ -2,36 +2,27 @@
 
 آخر تحديث: 2026-11-21
 
-## كُتب (كود حقيقي، غير مُصرَّف بعد)
-| الوحدة | الملف | اختبارات وحدة مكتوبة |
+## كُتب وبُني على CI
+| الوحدة | الملف | الحالة |
 |---|---|---|
-| منصة/مسارات | `platform.rs` | — |
-| تقييم rules | `rules.rs` | 4 |
-| Version JSON (قديم+حديث+inheritsFrom) | `version.rs` | 2 |
-| Launch Core (classpath، placeholders، أمر Java، تشغيل) | `launch.rs` | 4 |
-| Manifest الرسمي | `manifest.rs` | 1 |
-| Download Manager (SHA1، Range، إعادة محاولة) | `download.rs` | 1 |
-| Java Runtime Manager (Mojang) | `java.rs` | 2 |
-| تثبيت client/libs/natives/assets | `install.rs` | — |
-| CLI للاختبار | `hrc-cli` | — |
+| منصة/مسارات، rules، Version JSON، Launch Core | `hrc-core` | اختبارات وحدة |
+| Manifest، Download (SHA1/Range)، Java Runtime، Install | `hrc-core` | تثبيت فعلي مُختبَر (انظر أدناه) |
+| Instances + Settings + Offline UUID | `instance.rs`, `settings.rs`, `launch.rs` | اختبارات وحدة |
+| واجهة Tauri + TypeScript | `src-tauri/`, `ui/` | تُصرَّف وتُبنى EXE على CI |
+| Installer (Inno Setup) | `installer/horizon.iss` | يُبنى على CI |
+
+## اختُبر فعلاً (GitHub Actions)
+- `cargo test`: 21 اختباراً ناجحاً على Ubuntu وWindows.
+- تثبيت من خوادم Mojang مع SHA1: 1.8.9 و1.12.2 و1.16.5 و1.20.1.
+- بناء `horizon-rust-clean.exe` و`hrc-cli.exe` والـ Installer على Windows.
+- فحص أنواع TypeScript للواجهة (`tsc`، بلا أخطاء).
+
+## لم يُختبر بعد (لا تعتمد عليه)
+- **تشغيل اللعبة فعلياً** من الواجهة أو الـ CLI، والتبديل بين الإصدارات.
+- تنزيل Java Runtime وتشغيله على Windows، وأحدث إصدار مستقر، وBeta/Alpha.
+- مظهر الواجهة وسلوك الأزرار على جهاز حقيقي (لم تُفتح الواجهة على شاشة).
+- تحتاج النافذة WebView2 (موجود عادةً في Windows 10/11 المحدّث).
 
 ## لم يُنفَّذ بعد
-Tauri + واجهة TypeScript، Instances (SQLite)، Microsoft Auth، Clean/Performance،
-تغليف EXE وInstaller.
-
-## ما اختُبر فعلاً (GitHub Actions، تشغيل 44900738335)
-- `cargo test`: 14 اختباراً ناجحاً على Ubuntu وWindows.
-- تثبيت فعلي من خوادم Mojang: 1.8.9 (768 ملفاً)، 1.12.2 (1342)، 1.16.5 (2665)، 1.20.1 (3653) — كلها ناجحة مع التحقق من SHA1.
-- بناء `hrc-cli.exe` لـ Windows (artifact).
-
-## ما لم يُختبر بعد (لا تعتمد عليه)
-- **تشغيل اللعبة فعلياً** (سيرفر CI بلا شاشة) والتبديل بين الإصدارات.
-- تنزيل Java Runtime وتشغيله، فك natives على Windows، الإصدارات القديمة (Beta/Alpha)، أحدث إصدار مستقر.
-- اختبار `launch` يحتاج تشغيلاً محلياً على جهازك.
-
-## الخطوة التالية
-```
-cargo test -p hrc-core                  # اختبارات الوحدة
-cargo run -p hrc-cli -- install 1.8.9
-cargo run -p hrc-cli -- launch 1.8.9 Steve 2048   # يحتاج شاشة (display)
-```
+Microsoft Authentication (حالياً Offline للتجربة فقط)، وضعا Vanilla/Performance (Sodium/Lithium)،
+عرض RAM المستخدمة أثناء اللعب، توقيع رقمي للـ Installer.
