@@ -10,8 +10,17 @@ use hrc_core::rules::Features;
 use hrc_core::{install, java};
 use std::sync::{atomic::Ordering, Arc};
 
+#[cfg(windows)]
+extern "system" {
+    fn SetConsoleOutputCP(code_page: u32) -> i32;
+}
+
 #[tokio::main]
 async fn main() -> hrc_core::Result<()> {
+    #[cfg(windows)]
+    unsafe {
+        SetConsoleOutputCP(65001); // UTF-8
+    }
     let a: Vec<String> = std::env::args().collect();
     let client = reqwest::Client::builder().user_agent("HorizonRustClean/0.1").build()?;
     let data = data_dir();
@@ -26,8 +35,8 @@ async fn main() -> hrc_core::Result<()> {
             }
         }
         Some("install") | Some("launch") => {
-            let id = a.get(2).expect("اكتب رقم الإصدار");
-            let entry = manifest.find(id).ok_or_else(|| hrc_core::Error::Msg(format!("إصدار غير معروف: {id}")))?;
+            let id = a.get(2).expect("missing version id");
+            let entry = manifest.find(id).ok_or_else(|| hrc_core::Error::Msg(format!("unknown version: {id}")))?;
             install::install_version_json(&client, &shared, entry).await?;
             let version = install::load_version(&shared, id)?;
 
@@ -35,7 +44,7 @@ async fn main() -> hrc_core::Result<()> {
             let natives = inst.join("natives");
             let progress = Arc::new(Progress::default());
             install::install_game_files(&client, &shared, &version, &natives, Os::current(), &Features::default(), progress.clone()).await?;
-            println!("تم تثبيت {id} ({} ملفاً)", progress.files_done.load(Ordering::Relaxed));
+            println!("Installed {id} ({} files)", progress.files_done.load(Ordering::Relaxed));
 
             if a[1] == "launch" {
                 let java_path = java::ensure_runtime(&client, &data, version.java_component(), progress).await?;
@@ -55,10 +64,10 @@ async fn main() -> hrc_core::Result<()> {
                 let cmd = build_command(&ctx)?;
                 let mut child = spawn(&cmd, |is_err, l| if is_err { eprintln!("{l}") } else { println!("{l}") }).await?;
                 let status = child.wait().await?;
-                println!("انتهت اللعبة: {status}");
+                println!("Game exited: {status}");
             }
         }
-        _ => eprintln!("الاستخدام: hrc list|install <v>|launch <v> [user] [ram]"),
+        _ => eprintln!("Usage: hrc-cli list [release|snapshot|old_beta|old_alpha] | install <version> | launch <version> [user] [ram_mb]"),
     }
     Ok(())
 }

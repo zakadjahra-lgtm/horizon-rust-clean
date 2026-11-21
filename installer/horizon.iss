@@ -24,6 +24,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 WizardStyle=modern
+SetupIconFile=..\assets\icon.ico
+UninstallDisplayIcon={app}\icon.ico
 UninstallDisplayName=Horizon Rust Clean
 
 [Tasks]
@@ -32,13 +34,14 @@ Name: "addtopath"; Description: "Add hrc-cli to PATH (use it from any terminal)"
 
 [Files]
 Source: "{#SourceExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\STATUS.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 ; النسخة الحالية سطر أوامر: الاختصار يفتح نافذة طرفية في مجلد التثبيت ويبقيها مفتوحة
-Name: "{autoprograms}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"
-Name: "{autodesktop}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""chcp 65001 >nul && cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
+Name: "{autodesktop}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""chcp 65001 >nul && cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}'))

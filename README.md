@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.png" width="120" alt="logo"></p>
+
 # Horizon Rust Clean
 
 لانشر Minecraft Java Edition مبني بـ **Rust**، يشغّل ملفات Minecraft الأصلية الرسمية عبر **Java** ويدير كل ما حولها (الإصدارات، التحميل، Java، التشغيل).
