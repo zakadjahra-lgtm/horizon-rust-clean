@@ -57,6 +57,50 @@ jobs:
             target/release/hrc-cli.exe
             installer/Output/HorizonRustClean-Setup.exe
 
+  # تشغيل حقيقي للعبة تحت شاشة افتراضية مع Horizon Client، ثم لقطة شاشة تُرفع لفرع ci-shots-<version>
+  game-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["1.8.9"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb x11-utils imagemagick \
+            libxxf86vm1 libxcursor1 libxrandr2 libxi6 libxext6 libgl1 libgl1-mesa-dri \
+            libglu1-mesa libopenal1 libfontconfig1 libfreetype6 fonts-dejavu-core
+      - name: Build Horizon Client (Java agent)
+        run: mvn -B -q -f client/pom.xml package
+      - name: Build CLI
+        run: cargo build --release -p hrc-cli
+      - name: Launch game under Xvfb
+        run: ci/game-smoke.sh ${{ matrix.version }} 100
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-smoke-${{ matrix.version }}
+          path: ci-out/
+      - name: Publish screenshot and log to branch ci-shots-${{ matrix.version }}
+        if: always()
+        run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@users.noreply.github.com"
+          d=$(mktemp -d)
+          cp ci-out/* "$d"/ 2>/dev/null || true
+          cd "$d"
+          git init -q -b shots
+          git add -A
+          git commit -q -m "shots ${{ matrix.version }} ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" shots:refs/heads/ci-shots-${{ matrix.version }}
+
   release:
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
     needs: [windows-exe, install-smoke]

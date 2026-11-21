@@ -57,7 +57,9 @@ async fn main() -> hrc_core::Result<()> {
                     auth: AuthSession::offline(a.get(3).map(String::as_str).unwrap_or("Player"), "00000000-0000-0000-0000-000000000000"),
                     max_memory_mb: a.get(4).and_then(|s| s.parse().ok()).unwrap_or(2048),
                     min_memory_mb: 512,
-                    extra_jvm_args: vec![],
+                    extra_jvm_args: std::env::var("HRC_EXTRA_JVM")
+                        .map(|v| v.split_whitespace().map(String::from).collect())
+                        .unwrap_or_default(),
                     features: Features::default(),
                     os: Os::current(),
                 };
