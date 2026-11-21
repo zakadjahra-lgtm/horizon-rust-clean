@@ -20,6 +20,7 @@ LOG="$OUT/$VER.log"; SHOT="$OUT/$VER.png"
 start_server() {
   case "$1" in
     xvfb) Xvfb :99 -screen 0 1280x720x24 +extension GLX +extension RANDR +render -noreset >"$OUT/xserver-$1.log" 2>&1 & ;;
+    xorg) sudo Xorg :99 -config "$ROOT/ci/xorg-dummy.conf" -noreset -ac -nolisten tcp -novtswitch -sharevts -logfile "$OUT/xorg.log" >"$OUT/xserver-$1.log" 2>&1 & ;;
     xvnc) Xvnc :99 -geometry 1280x720 -depth 24 -SecurityTypes None +extension GLX >"$OUT/xserver-$1.log" 2>&1 & ;;
   esac
   SRV=$!
@@ -28,8 +29,8 @@ start_server() {
 }
 
 reached=0
-for server in xvfb xvnc; do
-  command -v "$([ $server = xvfb ] && echo Xvfb || echo Xvnc)" >/dev/null || { echo "skip $server (not installed)"; continue; }
+for server in xorg xvfb xvnc; do
+  command -v "$(case $server in xorg) echo Xorg;; xvfb) echo Xvfb;; *) echo Xvnc;; esac)" >/dev/null || { echo "skip $server (not installed)"; continue; }
   echo "=== attempt with $server ==="
   start_server "$server" || { echo "$server did not start"; kill $SRV 2>/dev/null; continue; }
   "$ROOT/target/release/hrc-cli" launch "$VER" Player 1536 > "$LOG" 2>&1 &
@@ -44,7 +45,7 @@ for server in xvfb xvnc; do
     import -window root "$SHOT" 2>"$OUT/import.log" || true
   fi
   cp "$LOG" "$OUT/$VER-$server.log"
-  pkill -f "net.minecraft" 2>/dev/null; sleep 2; kill $GP $SRV 2>/dev/null; pkill -f hrc-cli 2>/dev/null
+  pkill -f "net.minecraft" 2>/dev/null; sleep 2; kill $GP 2>/dev/null; sudo pkill -f "Xorg :99" 2>/dev/null; kill $SRV 2>/dev/null; pkill -f hrc-cli 2>/dev/null
   [ $reached = 1 ] && { echo "$server: HUD frame drawn"; break; }
   echo "$server: did not reach HUD frame"; grep -aE "Exception|Error" "$LOG" | head -3
   sleep 2
