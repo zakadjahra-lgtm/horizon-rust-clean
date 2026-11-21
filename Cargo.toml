@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/hrc-core", "crates/hrc-cli"]
-# src-tauri يُضاف عند مرحلة الواجهة
+members = ["crates/hrc-core", "crates/hrc-cli", "src-tauri"]
 
 [workspace.package]
 version = "0.1.0"

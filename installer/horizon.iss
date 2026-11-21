@@ -1,11 +1,14 @@
 ; Horizon Rust Clean — Inno Setup script
-; البناء: ISCC.exe /DAppVersion=0.1.0 /DSourceExe=..\target\release\hrc-cli.exe horizon.iss
+; البناء: ISCC.exe /DAppExe=..\target\release\horizon-rust-clean.exe /DCliExe=..\target\release\hrc-cli.exe horizon.iss
 
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.2.0"
 #endif
-#ifndef SourceExe
-  #define SourceExe "..\target\release\hrc-cli.exe"
+#ifndef AppExe
+  #define AppExe "..\target\release\horizon-rust-clean.exe"
+#endif
+#ifndef CliExe
+  #define CliExe "..\target\release\hrc-cli.exe"
 #endif
 
 [Setup]
@@ -25,7 +28,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 WizardStyle=modern
 SetupIconFile=..\assets\icon.ico
-UninstallDisplayIcon={app}\icon.ico
+UninstallDisplayIcon={app}\horizon-rust-clean.exe
 UninstallDisplayName=Horizon Rust Clean
 
 [Tasks]
@@ -33,15 +36,18 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 Name: "addtopath"; Description: "Add hrc-cli to PATH (use it from any terminal)"; GroupDescription: "Command line:"; Flags: unchecked
 
 [Files]
-Source: "{#SourceExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#CliExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\STATUS.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-; النسخة الحالية سطر أوامر: الاختصار يفتح نافذة طرفية في مجلد التثبيت ويبقيها مفتوحة
-Name: "{autoprograms}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""chcp 65001 >nul && cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"
-Name: "{autodesktop}\Horizon Rust Clean"; Filename: "{cmd}"; Parameters: "/k ""chcp 65001 >nul && cd /d ""{app}"" && hrc-cli.exe"""; WorkingDir: "{app}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
+Name: "{autoprograms}\Horizon Rust Clean"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\Horizon Rust Clean"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\horizon-rust-clean.exe"; Description: "Launch Horizon Rust Clean"; Flags: nowait postinstall skipifsilent
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}'))

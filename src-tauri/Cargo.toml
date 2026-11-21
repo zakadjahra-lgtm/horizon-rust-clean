@@ -1,0 +1,24 @@
+[package]
+name = "hrc-app"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "horizon-rust-clean"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+hrc-core = { path = "../crates/hrc-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+
+[features]
+# مطلوب للبناء النهائي: يضمّن ملفات الواجهة داخل الـ EXE بدل خادم التطوير.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

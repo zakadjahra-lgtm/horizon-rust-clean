@@ -3,11 +3,13 @@
 
 pub mod download;
 pub mod install;
+pub mod instance;
 pub mod java;
 pub mod launch;
 pub mod manifest;
 pub mod platform;
 pub mod rules;
+pub mod settings;
 pub mod version;
 
 use thiserror::Error;

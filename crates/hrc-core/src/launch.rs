@@ -28,6 +28,16 @@ impl AuthSession {
     }
 }
 
+/// UUID للّعب غير المتصل (نفس خوارزمية Minecraft: UUID v3 من "OfflinePlayer:<name>").
+pub fn offline_uuid(name: &str) -> String {
+    use md5::{Digest, Md5};
+    let mut h: [u8; 16] = Md5::digest(format!("OfflinePlayer:{name}").as_bytes()).into();
+    h[6] = (h[6] & 0x0f) | 0x30;
+    h[8] = (h[8] & 0x3f) | 0x80;
+    let x = hex::encode(h);
+    format!("{}-{}-{}-{}-{}", &x[0..8], &x[8..12], &x[12..16], &x[16..20], &x[20..32])
+}
+
 #[derive(Debug, Clone)]
 pub struct LaunchContext {
     pub version: VersionJson,
@@ -197,13 +207,16 @@ pub async fn spawn(
     on_line: impl Fn(bool, String) + Send + Sync + Clone + 'static,
 ) -> Result<Child> {
     tokio::fs::create_dir_all(&cmd.working_dir).await?;
-    let mut child = Command::new(&cmd.program)
+    let mut command = Command::new(&cmd.program);
+    command
         .args(&cmd.args)
         .current_dir(&cmd.working_dir)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
-        .kill_on_drop(false)
-        .spawn()?;
+        .kill_on_drop(false);
+    #[cfg(windows)]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW: لا نافذة طرفية تومض
+    let mut child = command.spawn()?;
     if let Some(out) = child.stdout.take() {
         let cb = on_line.clone();
         tokio::spawn(async move {
@@ -243,6 +256,15 @@ mod tests {
             features: Features::default(),
             os,
         }
+    }
+
+    #[test]
+    fn offline_uuid_is_stable_v3() {
+        let a = offline_uuid("Steve");
+        assert_eq!(a, offline_uuid("Steve"));
+        assert_ne!(a, offline_uuid("Alex"));
+        assert_eq!(a.len(), 36);
+        assert_eq!(a.chars().nth(14), Some('3')); // version nibble
     }
 
     #[test]

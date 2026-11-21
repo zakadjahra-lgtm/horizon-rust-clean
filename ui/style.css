@@ -1,0 +1,59 @@
+:root {
+  --bg: #0e1116; --panel: #151a22; --panel2: #1c2330; --line: #263041;
+  --text: #e6edf3; --muted: #8b98a9; --accent: #5ac05a; --accent2: #3f9b3f; --danger: #e5534b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 14px/1.45 "Segoe UI", system-ui, sans-serif; overflow: hidden; user-select: none; }
+.app { display: flex; height: 100vh; }
+.side { width: 210px; background: var(--panel); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; padding: 14px 10px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-weight: 700; font-size: 17px; }
+.brand img { width: 38px; height: 38px; }
+.brand small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav button { background: none; border: 0; color: var(--muted); text-align: left; padding: 10px 12px;
+  border-radius: 8px; font-size: 14px; cursor: pointer; }
+.nav button:hover { background: var(--panel2); color: var(--text); }
+.nav button.active { background: var(--panel2); color: var(--accent); font-weight: 600; }
+.ver { color: var(--muted); font-size: 12px; padding: 8px; }
+#view { flex: 1; overflow: auto; padding: 26px 30px; user-select: text; }
+h1 { margin: 0 0 18px; font-size: 22px; }
+h2 { margin: 0 0 10px; font-size: 17px; }
+h3 { margin: 0 0 12px; }
+.muted { color: var(--muted); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.center { text-align: center; padding: 40px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row.end { justify-content: flex-end; margin-top: 16px; }
+.grow { flex: 1; }
+.input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; font-size: 14px; min-width: 120px; }
+.input:focus { outline: 1px solid var(--accent); }
+select.input { min-width: 260px; }
+.btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 14px; cursor: pointer; font-size: 13px; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+.btn.primary:hover { background: var(--accent); }
+.btn.danger { color: var(--danger); }
+.btn:disabled, .play:disabled { opacity: .55; cursor: default; }
+.play { background: linear-gradient(180deg, var(--accent), var(--accent2)); color: #fff; border: 0; border-radius: 12px;
+  font-size: 24px; font-weight: 800; letter-spacing: 1px; padding: 18px 64px; cursor: pointer; margin: 14px 0; }
+.play:hover:not(:disabled) { filter: brightness(1.08); }
+.bar { height: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.bar > div { height: 100%; width: 0%; background: var(--accent); transition: width .25s; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--muted); }
+.badge.ok { color: var(--accent); }
+.list-item { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.console { background: #0a0d12; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  height: calc(100vh - 150px); overflow: auto; font: 12px/1.5 Consolas, monospace; white-space: pre-wrap; word-break: break-all; }
+.console .err { color: #ff8b85; }
+.console .sys { color: var(--accent); }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 360px; max-width: 480px; }
+.modal .input { width: 100%; }
+#toasts { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 20; }
+.toast { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 8px; max-width: 420px; }
+.toast.err { border-left-color: var(--danger); }
+label.chk { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); cursor: pointer; }

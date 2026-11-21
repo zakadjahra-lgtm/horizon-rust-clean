@@ -22,7 +22,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Unit tests
-        run: cargo test --workspace --all-targets
+        run: cargo test --workspace --exclude hrc-app --all-targets
 
   windows-exe:
     needs: test
@@ -31,20 +31,29 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Build CLI (release)
-        run: cargo build --release -p hrc-cli
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build UI (TypeScript)
+        working-directory: ui
+        run: |
+          npm install
+          npm run build
+      - name: Build app and CLI (release)
+        run: cargo build --release -p hrc-app -p hrc-cli
       - name: Build installer (Inno Setup)
         shell: pwsh
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
-          & $iscc "/DSourceExe=..\target\release\hrc-cli.exe" installer\horizon.iss
+          & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" installer\horizon.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Get-ChildItem installer\Output
       - uses: actions/upload-artifact@v4
         with:
           name: hrc-cli-windows
           path: |
+            target/release/horizon-rust-clean.exe
             target/release/hrc-cli.exe
             installer/Output/HorizonRustClean-Setup.exe
 
@@ -63,13 +72,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name HorizonRustClean-Setup.exe | head -1)" \
+          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" \
             --repo "${{ github.repository }}" \
             --title "Horizon Rust Clean $TAG (تجريبي)" \
             --prerelease \
-            --notes "نسخة تجريبية مبكرة: **أداة سطر أوامر فقط** (بدون واجهة رسومية). الأفضل تحميل HorizonRustClean-Setup.exe (Installer مع اختصار سطح المكتب).
+            --notes "نسخة تجريبية: لانشر بواجهة رسومية (Play / Instances / Downloads / Java / Console / Settings). حمّل HorizonRustClean-Setup.exe.
           ✅ مُختبَر: اختبارات الوحدة، وتثبيت 1.8.9 / 1.12.2 / 1.16.5 / 1.20.1 مع SHA1.
-          ⚠️ غير مُختبَر بعد: تشغيل اللعبة فعلياً (launch)، وتنزيل Java Runtime.
+          ⚠️ غير مُختبَر بعد: تشغيل اللعبة فعلياً من الواجهة، وتنزيل Java Runtime. تسجيل Microsoft وPerformance Clean غير منفذين بعد (اللعب Offline للتجربة).
           الاستخدام: hrc-cli.exe list | install 1.8.9 | launch 1.8.9 Steve 2048
           التفاصيل في README.md و STATUS.md."
 
