@@ -63,11 +63,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" hrc-cli.exe HorizonRustClean-Setup.exe \
+          gh release create "$TAG" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name HorizonRustClean-Setup.exe | head -1)" \
             --repo "${{ github.repository }}" \
             --title "Horizon Rust Clean $TAG (تجريبي)" \
             --prerelease \
-            --notes "نسخة تجريبية مبكرة: **أداة سطر أوامر فقط** (بدون واجهة رسومية).
+            --notes "نسخة تجريبية مبكرة: **أداة سطر أوامر فقط** (بدون واجهة رسومية). الأفضل تحميل HorizonRustClean-Setup.exe (Installer مع اختصار سطح المكتب).
           ✅ مُختبَر: اختبارات الوحدة، وتثبيت 1.8.9 / 1.12.2 / 1.16.5 / 1.20.1 مع SHA1.
           ⚠️ غير مُختبَر بعد: تشغيل اللعبة فعلياً (launch)، وتنزيل Java Runtime.
           الاستخدام: hrc-cli.exe list | install 1.8.9 | launch 1.8.9 Steve 2048
