@@ -26,3 +26,10 @@
 ## لم يُنفَّذ بعد
 Microsoft Authentication (حالياً Offline للتجربة فقط)، وضعا Vanilla/Performance (Sodium/Lithium)،
 عرض RAM المستخدمة أثناء اللعب، توقيع رقمي للـ Installer.
+
+## Horizon Client (HUD داخل اللعبة) — الشريحة الأولى
+- **يعمل ومُتحقَّق منه بلقطة شاشة على CI:** تشغيل Minecraft 1.8.9 فعلياً عبر `hrc-cli` مع Java Agent، ورسم FPS وCPS وKeystrokes فوق القائمة الرئيسية (`glError=0`).
+- الآلية: `-javaagent` يضيف استدعاءً في `org.lwjgl.opengl.Display.update(Z)` (LWJGL 2) — لا mappings ولا تعديل لملفات Minecraft.
+- نطاقها الحالي: LWJGL 2 فقط (1.8 – 1.12.2). كل المودات مطفأة افتراضياً وتُضبط عبر `horizon-client.properties` في مجلد اللعبة.
+- ملاحظة: في CI يفشل أول تشغيل أحياناً بخطأ `LinuxDisplay.getAvailableDisplayModes` تحت X افتراضي؛ لا يظهر على Windows الحقيقي، والسكربت يعيد المحاولة.
+- **لم يُنفَّذ بعد:** قائمة داخل اللعبة (Right Shift) وتعديل أماكن الـ HUD، Toggle Sprint/Zoom/Coordinates/Armor (تحتاج داخل Minecraft)، LWJGL 3 (1.13+)، OpenGL core profile (1.17+)، ودمج الـ agent في اللانشر (خيار تفعيل + شحنه في الـ Installer).
