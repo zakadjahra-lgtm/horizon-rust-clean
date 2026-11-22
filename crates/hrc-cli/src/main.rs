@@ -50,7 +50,7 @@ async fn main() -> hrc_core::Result<()> {
         let l = Loader::parse(&std::env::var("HRC_LOADER").unwrap_or_else(|_| "fabric".into()))
             .ok_or_else(|| hrc_core::Error::Msg("unknown loader".into()))?;
         let (mc, slug) = (a.get(2).expect("missing mc version"), a.get(3).expect("missing mod slug"));
-        let game = data.join("instances").join(format!("cli-{}-{mc}", l.label().split_whitespace().next().unwrap_or("x").to_lowercase()));
+        let game = data.join("instances").join(format!("cli-{}-{mc}", l.label().split_whitespace().next().unwrap_or("x").to_lowercase())).join("game");
         let got = hrc_core::modrinth::install_mod(&client, &game, slug, l, mc).await?;
         println!("Installed mods: {}", got.join(", "));
         for it in hrc_core::content::list_checked(&game, hrc_core::content::Kind::Mods, l, mc)? {

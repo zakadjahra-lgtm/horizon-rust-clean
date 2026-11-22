@@ -54,6 +54,33 @@ jobs:
           & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" "/DAgentJar=..\target\release\horizon-client.jar" installer\horizon.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Get-ChildItem installer\Output
+      - name: Test installer (silent install, files, CLI, real network, real install)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dir = "C:\hrc-installed"
+          Start-Process -FilePath "installer\Output\HorizonRustClean-Setup.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait
+          foreach ($f in "horizon-rust-clean.exe","hrc-cli.exe","horizon-client.jar") {
+            if (-not (Test-Path "$dir\$f")) { throw "MISSING after install: $f" }
+            Write-Host "PASS installed $f ($((Get-Item "$dir\$f").Length) bytes)"
+          }
+          $env:HRC_DATA = "$env:RUNNER_TEMP\hrc-win"
+          & "$dir\hrc-cli.exe" flags performance
+          Write-Host "--- netcheck (Windows, native TLS roots) ---"
+          & "$dir\hrc-cli.exe" netcheck
+          Write-Host "netcheck exit: $LASTEXITCODE"
+          Write-Host "--- real install on Windows: Fabric 1.20.1 ---"
+          $env:HRC_LOADER = "fabric"
+          & "$dir\hrc-cli.exe" install 1.20.1
+          if ($LASTEXITCODE -ne 0) { throw "hrc-cli install failed on Windows" }
+          Remove-Item Env:HRC_LOADER
+          Write-Host "--- GUI starts ---"
+          $p = Start-Process -FilePath "$dir\horizon-rust-clean.exe" -PassThru
+          Start-Sleep -Seconds 20
+          $p.Refresh()
+          if ($p.HasExited) { throw "GUI exited early with code $($p.ExitCode)" }
+          Write-Host "PASS GUI process alive after 20s; window title: '$($p.MainWindowTitle)'"
+          Stop-Process -Id $p.Id -Force
       - uses: actions/upload-artifact@v4
         with:
           name: hrc-cli-windows
@@ -237,6 +264,9 @@ jobs:
           - { loader: forge, version: "1.16.5" }
           - { loader: forge, version: "1.20.1" }
           - { loader: neoforge, version: "1.21.1" }
+          # مودات حقيقية من Modrinth داخل instance واحد، والـ instance الآخر على نفس الإصدار نظيف منها
+          - { loader: fabric, version: "1.20.1", mod: lithium, absent: "" }
+          - { loader: fabric, version: "1.20.1", mod: sodium, absent: "" }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -250,8 +280,11 @@ jobs:
       - name: Build CLI
         run: cargo build --release -p hrc-cli
       - name: Launch ${{ matrix.loader }} ${{ matrix.version }}
+        env:
+          SMOKE_MOD: ${{ matrix.mod }}
+          SMOKE_ABSENT: ${{ matrix.absent }}
         run: ci/launch-smoke.sh ${{ matrix.loader }} ${{ matrix.version }} 300
-      - name: Publish screenshot and log to branch ci-shots-${{ matrix.loader }}-${{ matrix.version }}
+      - name: Publish screenshot and log to branch ci-shots-${{ matrix.loader }}-${{ matrix.version }}${{ matrix.mod && format('-{0}', matrix.mod) || '' }}${{ matrix.absent && '-clean' || '' }}
         if: always()
         run: |
           git config --global user.name "ci"
@@ -262,4 +295,39 @@ jobs:
           git init -q -b shots
           git add -A
           git commit -q -m "shots ${{ matrix.loader }} ${{ matrix.version }} ${{ github.sha }}"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" shots:refs/heads/ci-shots-${{ matrix.loader }}-${{ matrix.version }}
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" shots:refs/heads/ci-shots-${{ matrix.loader }}-${{ matrix.version }}${{ matrix.mod && format('-{0}', matrix.mod) || '' }}${{ matrix.absent && '-clean' || '' }}
+
+  # عزل الـ instances: ثلاث بيئات على نفس إصدار Minecraft وفي نفس مجلد بيانات اللانشر، بمودات مختلفة
+  isolation-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p hrc-cli
+      - name: Install vanilla + Fabric + Quilt 1.20.1 side by side with different mods
+        env:
+          HRC_DATA: ${{ runner.temp }}/hrc-iso
+        run: |
+          set -e
+          CLI=./target/release/hrc-cli
+          $CLI install 1.20.1
+          HRC_LOADER=fabric $CLI install 1.20.1
+          HRC_LOADER=quilt  $CLI install 1.20.1
+          HRC_LOADER=fabric $CLI mod 1.20.1 lithium
+          HRC_LOADER=quilt  $CLI mod 1.20.1 ferrite-core
+          I="$HRC_DATA/instances"
+          ls -1 "$I"
+          fail=0
+          check() { if eval "$2"; then echo "PASS $1"; else echo "FAIL $1"; fail=1; fi; }
+          check "three separate instance folders" '[ -d "$I/cli-1.20.1" ] && [ -d "$I/cli-fabric-1.20.1" ] && [ -d "$I/cli-quilt-1.20.1" ]'
+          check "fabric has lithium"            'ls "$I/cli-fabric-1.20.1/game/mods" | grep -qi lithium'
+          check "fabric has NO ferrite-core"    '! ls "$I/cli-fabric-1.20.1/game/mods" | grep -qi ferrite'
+          check "quilt has ferrite-core"        'ls "$I/cli-quilt-1.20.1/game/mods" | grep -qi ferrite'
+          check "quilt has NO lithium"          '! ls "$I/cli-quilt-1.20.1/game/mods" | grep -qi lithium'
+          check "vanilla has no mods folder"    '[ ! -e "$I/cli-1.20.1/game/mods" ]'
+          check "separate natives folders"      '[ -d "$I/cli-fabric-1.20.1/natives" ] && [ -d "$I/cli-quilt-1.20.1/natives" ] && [ -d "$I/cli-1.20.1/natives" ]'
+          check "no jar shared between fabric and quilt instances" '[ -z "$(comm -12 <(cd "$I/cli-fabric-1.20.1/game/mods" && ls | sort) <(cd "$I/cli-quilt-1.20.1/game/mods" && ls | sort))" ]'
+          check "loader versions live side by side in shared/versions" 'ls "$HRC_DATA/shared/versions" | grep -q fabric-loader && ls "$HRC_DATA/shared/versions" | grep -q quilt-loader'
+          exit $fail

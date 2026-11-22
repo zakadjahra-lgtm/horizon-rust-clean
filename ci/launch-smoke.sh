@@ -23,6 +23,11 @@ start_server() {
 }
 stop_all() { pkill -f "net.minecraft" 2>/dev/null; pkill -f "bootstraplauncher|cpw.mods|net.minecraftforge|net.neoforged|KnotClient|QuiltLoader" 2>/dev/null; sleep 2; kill $GP 2>/dev/null; sudo pkill -f "Xorg :99" 2>/dev/null; kill $SRV 2>/dev/null; pkill -f hrc-cli 2>/dev/null; true; }
 
+# مود اختياري يُثبَّت قبل التشغيل (من Modrinth) لإثبات أنه يُحمَّل داخل هذا الـ instance فقط
+if [ -n "${SMOKE_MOD:-}" ]; then
+  "$ROOT/target/release/hrc-cli" install "$VER" > "$OUT/$LOADER-$VER-install.log" 2>&1 || { echo "FAIL install"; tail -5 "$OUT/$LOADER-$VER-install.log"; exit 1; }
+  "$ROOT/target/release/hrc-cli" mod "$VER" "$SMOKE_MOD" | tee "$OUT/$LOADER-$VER-mod.log"
+fi
 window_found=0
 for server in xvfb xorg; do
   command -v "$(case $server in xorg) echo Xorg;; *) echo Xvfb;; esac)" >/dev/null || continue
@@ -60,5 +65,11 @@ if [ -s "$SHOT" ]; then
   [ "${COLORS:-0}" -ge 100 ] && echo "PASS screenshot has content ($COLORS colors)" || { echo "FAIL screenshot looks empty ($COLORS colors)"; ok=0; }
 else echo "FAIL no screenshot"; ok=0; fi
 grep -qaE "Game crashed|This crash report|Exception in thread \"main\"|Failed to start|Could not create the Java Virtual Machine|Unrecognized option" "$LOG" && { echo "FAIL crash/startup error in log"; ok=0; } || echo "PASS no crash markers"
+if [ -n "${SMOKE_MOD:-}" ]; then
+  grep -qai "$SMOKE_MOD" "$LOG" && echo "PASS mod '$SMOKE_MOD' loaded by the game" || { echo "FAIL mod '$SMOKE_MOD' not seen in game log"; ok=0; }
+fi
+if [ -n "${SMOKE_ABSENT:-}" ]; then
+  grep -qai "$SMOKE_ABSENT" "$LOG" && { echo "FAIL '$SMOKE_ABSENT' leaked into this instance"; ok=0; } || echo "PASS '$SMOKE_ABSENT' absent from this instance"
+fi
 grep -aE "Created: [0-9]+x[0-9]+|Sound engine started|Backend library|Reloading ResourceManager" "$LOG" | head -3 | sed 's/^/  info: /'
 [ "$ok" = 1 ]
