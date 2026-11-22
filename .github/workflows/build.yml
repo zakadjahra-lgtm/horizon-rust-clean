@@ -126,6 +126,38 @@ jobs:
           الاستخدام: hrc-cli.exe list | install 1.8.9 | launch 1.8.9 Steve 2048
           التفاصيل في README.md و STATUS.md."
 
+  # تثبيت فعلي لكل نوع بيئة (Fabric/Quilt/Forge/NeoForge/Horizon) من الخوادم الرسمية
+  loader-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: fabric, version: "1.20.1" }
+          - { loader: quilt, version: "1.20.1" }
+          - { loader: forge, version: "1.20.1" }
+          - { loader: forge, version: "1.12.2" }
+          - { loader: neoforge, version: "1.21.1" }
+          - { loader: horizon, version: "1.20.1" }
+          - { loader: horizon, version: "1.8.9" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p hrc-cli
+      - name: Install ${{ matrix.loader }} ${{ matrix.version }}
+        env:
+          HRC_DATA: ${{ runner.temp }}/hrc
+          HRC_LOADER: ${{ matrix.loader }}
+        run: |
+          ./target/release/hrc-cli install ${{ matrix.version }} 2>&1 | tee out.txt
+          grep -E "^Installed .* launch id " out.txt
+          ID=$(grep -E "^Installed .* launch id " out.txt | sed -E 's/.*launch id ([^ ]+) .*/\1/' | tail -1)
+          echo "launch id: $ID"
+          test -f "$HRC_DATA/shared/versions/$ID/$ID.json"
+          ls "$HRC_DATA"/instances/*/game
+
   # اختبار حقيقي: تثبيت الإصدار وبناء أمر التشغيل (بدون تشغيل اللعبة لأن السيرفر بلا شاشة)
   install-smoke:
     needs: test

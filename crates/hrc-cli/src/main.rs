@@ -7,7 +7,8 @@ use hrc_core::launch::{build_command, spawn, AuthSession, LaunchContext};
 use hrc_core::manifest::Manifest;
 use hrc_core::platform::{data_dir, Os};
 use hrc_core::rules::Features;
-use hrc_core::{install, java};
+use hrc_core::loader::{self, Loader};
+use hrc_core::{content, install, java};
 use std::sync::{atomic::Ordering, Arc};
 
 #[cfg(windows)]
@@ -41,19 +42,47 @@ async fn main() -> hrc_core::Result<()> {
             }
         }
         Some("install") | Some("launch") => {
+            // نوع البيئة من HRC_LOADER (vanilla|fabric|quilt|forge|neoforge|horizon)، الافتراضي vanilla
+            let loader_kind = match std::env::var("HRC_LOADER") {
+                Ok(v) => Loader::parse(&v).ok_or_else(|| hrc_core::Error::Msg(format!("unknown loader: {v}")))?,
+                Err(_) => Loader::Vanilla,
+            };
             let id = a.get(2).expect("missing version id");
             let entry = manifest.find(id).ok_or_else(|| hrc_core::Error::Msg(format!("unknown version: {id}")))?;
             install::install_version_json(&client, &shared, entry).await?;
-            let version = install::load_version(&shared, id)?;
+            let vanilla = install::load_version(&shared, id)?;
 
-            let inst = data.join("instances").join(format!("cli-{id}"));
+            // Vanilla يحتفظ بالمسار القديم (cli-<v>)؛ كل نوع آخر له مجلده المستقل
+            let inst = if loader_kind == Loader::Vanilla {
+                data.join("instances").join(format!("cli-{id}"))
+            } else {
+                data.join("instances").join(format!("cli-{}-{id}", loader_kind.label().split_whitespace().next().unwrap_or("x").to_lowercase()))
+            };
             let natives = inst.join("natives");
             let progress = Arc::new(Progress::default());
+
+            // Java مطلوب للتشغيل ولتثبيت Forge/NeoForge (installer)
+            let java_path = if a[1] == "launch" || loader::needs_vanilla_first(loader_kind) {
+                Some(java::ensure_runtime(&client, &data, vanilla.java_component(), progress.clone()).await?)
+            } else {
+                None
+            };
+            if loader::needs_vanilla_first(loader_kind) {
+                install::install_game_files(&client, &shared, &vanilla, &natives, Os::current(), &Features::default(), progress.clone()).await?;
+            }
+            let installed = loader::install(&client, &shared, loader_kind, id, java_path.as_deref().unwrap_or(std::path::Path::new(""))).await?;
+            let version = install::load_version(&shared, &installed.launch_id)?;
+            content::ensure_dirs(&inst.join("game"), loader_kind)?;
             install::install_game_files(&client, &shared, &version, &natives, Os::current(), &Features::default(), progress.clone()).await?;
-            println!("Installed {id} ({} files)", progress.files_done.load(Ordering::Relaxed));
+            println!(
+                "Installed {id} [{}] launch id {} ({} files)",
+                loader_kind.label(),
+                installed.launch_id,
+                progress.files_done.load(Ordering::Relaxed)
+            );
 
             if a[1] == "launch" {
-                let java_path = java::ensure_runtime(&client, &data, version.java_component(), progress).await?;
+                let java_path = java_path.expect("java resolved for launch");
                 let ctx = LaunchContext {
                     version,
                     shared_dir: shared,
@@ -75,7 +104,7 @@ async fn main() -> hrc_core::Result<()> {
                 println!("Game exited: {status}");
             }
         }
-        _ => eprintln!("Usage: hrc-cli list [release|snapshot|old_beta|old_alpha] | install <version> | launch <version> [user] [ram_mb]"),
+        _ => eprintln!("Usage: [HRC_LOADER=fabric|quilt|forge|neoforge|horizon] hrc-cli list [release|snapshot|old_beta|old_alpha] | install <version> | launch <version> [user] [ram_mb]"),
     }
     Ok(())
 }

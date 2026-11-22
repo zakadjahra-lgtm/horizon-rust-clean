@@ -1,5 +1,6 @@
 //! Instances: كل instance له مجلد مستقل (لعبة + natives + إعدادات)، فلا اختلاط بين الإصدارات.
 //! الملفات المشتركة (libraries/assets/versions) تبقى في `shared/` ولا تُحذف مع الـ instance.
+use crate::loader::Loader;
 use crate::{err, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -19,6 +20,20 @@ pub struct Instance {
     /// Profile العميل (HUD + أداء) المرتبط بهذا الـ instance؛ None = بلا تعديلات.
     #[serde(default)]
     pub profile_id: Option<String>,
+    /// نوع البيئة: Vanilla / Fabric / Quilt / Forge / NeoForge / Horizon. لكل نوع instance ومجلد مستقل.
+    #[serde(default)]
+    pub loader: Loader,
+    #[serde(default)]
+    pub loader_version: Option<String>,
+    /// معرّف الإصدار الذي يُشغَّل فعلاً (مثل `fabric-loader-0.16.9-1.20.1`)؛ None = `version_id`.
+    #[serde(default)]
+    pub launch_id: Option<String>,
+}
+
+impl Instance {
+    pub fn launch_version_id(&self) -> &str {
+        self.launch_id.as_deref().unwrap_or(&self.version_id)
+    }
 }
 
 pub fn instances_dir(data: &Path) -> PathBuf {
@@ -92,6 +107,10 @@ fn now_unix() -> u64 {
 }
 
 pub fn create(data: &Path, name: &str, version_id: &str, max_memory_mb: u32) -> Result<Instance> {
+    create_with(data, name, version_id, max_memory_mb, Loader::Vanilla)
+}
+
+pub fn create_with(data: &Path, name: &str, version_id: &str, max_memory_mb: u32, loader: Loader) -> Result<Instance> {
     if version_id.trim().is_empty() {
         return err("اختر إصداراً");
     }
@@ -104,8 +123,12 @@ pub fn create(data: &Path, name: &str, version_id: &str, max_memory_mb: u32) -> 
         installed: false,
         created_unix: now_unix(),
         profile_id: None,
+        loader,
+        loader_version: None,
+        launch_id: None,
     };
     std::fs::create_dir_all(game_dir(data, &inst.id))?;
+    crate::content::ensure_dirs(&game_dir(data, &inst.id), loader)?;
     save(data, &inst)?;
     Ok(inst)
 }
@@ -130,6 +153,13 @@ pub fn set_profile(data: &Path, id: &str, profile_id: Option<String>) -> Result<
     }
     let mut i = load(data, id)?;
     i.profile_id = profile_id;
+    save(data, &i)
+}
+
+pub fn set_launch(data: &Path, id: &str, loader_version: Option<String>, launch_id: String) -> Result<()> {
+    let mut i = load(data, id)?;
+    i.loader_version = loader_version;
+    i.launch_id = Some(launch_id);
     save(data, &i)
 }
 
@@ -239,6 +269,24 @@ mod tests {
         assert_eq!(load(&d, &a.id).unwrap().profile_id, Some(pid));
         assert_eq!(load(&d, &b.id).unwrap().profile_id, None);
         assert!(set_profile(&d, &a.id, Some("../x".into())).is_err());
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn each_loader_gets_its_own_isolated_folder() {
+        let d = tmp("f");
+        let v = create_with(&d, "Vanilla 1.20.1", "1.20.1", 2048, Loader::Vanilla).unwrap();
+        let f = create_with(&d, "Fabric 1.20.1", "1.20.1", 2048, Loader::Fabric).unwrap();
+        let q = create_with(&d, "Quilt 1.20.1", "1.20.1", 2048, Loader::Quilt).unwrap();
+        assert!(!game_dir(&d, &v.id).join("mods").exists());
+        assert!(game_dir(&d, &f.id).join("mods").is_dir() && game_dir(&d, &q.id).join("mods").is_dir());
+        std::fs::write(game_dir(&d, &f.id).join("mods/sodium.jar"), b"x").unwrap();
+        assert!(!game_dir(&d, &q.id).join("mods/sodium.jar").exists()); // لا اختلاط
+        assert_eq!(load(&d, &f.id).unwrap().loader, Loader::Fabric);
+        set_launch(&d, &f.id, Some("0.16.9".into()), "fabric-loader-0.16.9-1.20.1".into()).unwrap();
+        let f2 = load(&d, &f.id).unwrap();
+        assert_eq!(f2.launch_version_id(), "fabric-loader-0.16.9-1.20.1");
+        assert_eq!(load(&d, &v.id).unwrap().launch_version_id(), "1.20.1");
         let _ = std::fs::remove_dir_all(&d);
     }
 

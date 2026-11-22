@@ -89,7 +89,8 @@ pub async fn install_game_files(
             continue;
         }
         if let Some(a) = lib.downloads.as_ref().and_then(|d| d.artifact.as_ref()) {
-            if let Some(rel) = library_rel_path(lib) {
+            // Forge/NeoForge: مكتبات بـ url فارغ يضعها installer نفسه، فلا تُنزَّل هنا.
+            if let (Some(rel), false) = (library_rel_path(lib), a.url.is_empty()) {
                 jobs.push(art_job(a, shared.join("libraries").join(rel)));
             }
         } else if let (Some(base), Some(rel)) = (&lib.url, crate::launch::maven_path(&lib.name)) {
