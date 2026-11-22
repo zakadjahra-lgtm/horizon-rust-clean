@@ -58,3 +58,12 @@ Each instance has its own folder with its own `mods/`, `resourcepacks/`, `shader
 **Not verified:** that the downloaded mods actually load and run in a launched game; the "Get mods" UI and Rust-mod toggles on a real machine; FPS gains. Sodium's license is PolyForm Shield, so it is downloaded from Modrinth on request and never bundled.
 
 **Honest scope:** "Rust mods" are small launcher-side tools that run before the game starts; they do not modify Minecraft. The in-game HUD (FPS/CPS/Keystrokes) still works only on 1.8-1.12.2; on 1.13+ Horizon runs on a Fabric base without a HUD yet (LWJGL3 needs a different hook). Accounts: offline only (no Microsoft login, by decision).
+
+## Loaders: what is actually tested (CI, install only)
+
+`hrc-cli install` (official Fabric/Quilt meta APIs and official Forge/NeoForge installers) succeeded for:
+Fabric 1.16.5, 1.18, 1.20.1, 1.21.1, 26.3 · Quilt 1.18.2, 1.20.1, 1.21.1 · Forge 1.12.2, 1.16.5, 1.18.2, 1.20.1, 1.21.1, 26.3 · NeoForge 1.20.4, 1.21.1, 26.3.
+
+This is **install only**: the profile was created and the version JSON exists. Launching these loaders in a real game is NOT verified, so "supports all versions" is not claimed. Quilt 26.3 and Forge below 1.12.2 are untested.
+
+Mod compatibility check (unit-tested): detects Fabric/Quilt/Forge/NeoForge mods from the jar metadata, warns when a mod's loader doesn't match the instance, and checks the Minecraft version range for Fabric/Quilt mods. Forge/NeoForge mods are checked by loader type only (version ranges in mods.toml are not parsed). Network errors now show the real cause and are retried 3 times; the OS certificate store is trusted (helps with antivirus HTTPS scanning).
