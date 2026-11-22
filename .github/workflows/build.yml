@@ -136,11 +136,12 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
-    needs: [windows-exe, install-smoke]
+    needs: [windows-exe, install-smoke, launch-smoke, isolation-smoke, loader-smoke, mods-smoke]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: hrc-cli-windows
@@ -149,15 +150,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" \
+          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" CHANGELOG.md STATUS.md \
             --repo "${{ github.repository }}" \
-            --title "Horizon Rust Clean $TAG (تجريبي)" \
+            --title "Horizon Rust Clean $TAG (test build)" \
             --prerelease \
-            --notes "نسخة تجريبية: لانشر بواجهة رسومية (Play / Instances / Downloads / Java / Console / Settings). حمّل HorizonRustClean-Setup.exe.
-          ✅ مُختبَر: اختبارات الوحدة، وتثبيت 1.8.9 / 1.12.2 / 1.16.5 / 1.20.1 مع SHA1.
-          ⚠️ غير مُختبَر بعد: تشغيل اللعبة فعلياً من الواجهة، وتنزيل Java Runtime. تسجيل Microsoft وPerformance Clean غير منفذين بعد (اللعب Offline للتجربة).
-          الاستخدام: hrc-cli.exe list | install 1.8.9 | launch 1.8.9 Steve 2048
-          التفاصيل في README.md و STATUS.md."
+            --notes-file RELEASE_NOTES.md
 
   # تثبيت فعلي لكل نوع بيئة (Fabric/Quilt/Forge/NeoForge/Horizon) من الخوادم الرسمية
   loader-smoke:

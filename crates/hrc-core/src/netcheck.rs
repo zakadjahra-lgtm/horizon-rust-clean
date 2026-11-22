@@ -8,7 +8,7 @@ pub const ENDPOINTS: &[(&str, &str)] = &[
     ("Quilt meta", "https://meta.quiltmc.org/v3/versions/loader/1.20.1"),
     ("Forge promotions", "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"),
     ("NeoForge maven", "https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge"),
-    ("Modrinth API", "https://api.modrinth.com/v2/"),
+    ("Modrinth API", "https://api.modrinth.com/v2/tag/loader"),
 ];
 
 #[derive(Debug, Clone, Serialize)]

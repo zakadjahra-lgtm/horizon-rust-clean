@@ -1,4 +1,32 @@
-# الحالة الصادقة (STATUS)
+# Horizon Rust Clean — STATUS (v0.3.1)
+
+> Rule of this file: nothing is marked as working unless a test actually ran it. "Verified" means a CI job did it on the stated platform; everything else is listed under "Not verified".
+
+## Verified by CI for v0.3.1 (Linux x64, Xvfb + Mesa software GL; Windows x64 runner)
+
+| Check | Result |
+|---|---|
+| **Real launch** (Minecraft window appears, process still alive 45 s later, screenshot has real content, no crash marker, Java from launcher folder) | Vanilla 1.8.9, 1.12.2, 1.16.5, 1.20.1, 1.21.1 · Fabric 1.20.1, 1.21.1 · Quilt 1.20.1 · Forge 1.12.2, 1.16.5, 1.20.1 · NeoForge 1.21.1 |
+| I personally looked at screenshots of | Forge 1.20.1 and NeoForge 1.21.1 (Minecraft welcome screen). The other launches passed the automatic checks only. |
+| **Java Runtime automatic** | In every launch the Mojang runtime was downloaded into the launcher's own data folder (`runtimes/java-runtime-*`/`jre-legacy`); no system Java was used. |
+| **Mods really load** | Sodium 0.5.13 and Lithium 0.11.4, downloaded from Modrinth, were loaded by Fabric 1.20.1 (seen in the game log). |
+| **Instance isolation** | Vanilla + Fabric + Quilt on the same Minecraft version in one data folder: separate folders, separate mods (Fabric has Lithium only, Quilt has Ferrite Core only, Vanilla has no mods folder), separate natives, no shared jars. |
+| **Windows installer (x64)** | Silent install; `horizon-rust-clean.exe`, `hrc-cli.exe`, `horizon-client.jar` present; `hrc-cli.exe` ran on Windows (netcheck reached Mojang, Fabric, Quilt, Forge, NeoForge; Fabric 1.20.1 install completed); the GUI stayed alive 20 s with window title "Horizon Rust Clean". |
+| Install-only matrix | Fabric 1.16.5/1.18/1.20.1/1.21.1/26.3 · Quilt 1.18.2/1.20.1/1.21.1 · Forge 1.12.2/1.16.5/1.18.2/1.20.1/1.21.1/26.3 · NeoForge 1.20.4/1.21.1/26.3 |
+
+## NOT verified (do not assume these work)
+- **Launching the game on Windows.** The Windows CI runner has no GPU, so only install + GUI start were tested there. Launch was tested on Linux with software rendering.
+- Real-GPU performance, and any **FPS gain** (presets and Sodium/Lithium are not benchmarked).
+- The GUI beyond starting: clicking through Create / Install / Play / Content / Get mods / Rust mods / Network check has not been exercised by an automated or human test.
+- Launch of: Forge < 1.12.2, Minecraft 1.13–1.15, Fabric/Quilt/Forge/NeoForge 26.x, Quilt 1.21.1, NeoForge 1.20.4 (these were install-tested only or not tested).
+- **The `meta.fabricmc.net` error reported on the author's PC.** It could not be reproduced: the CI Linux and Windows runners reach it fine. The cause is probably local (firewall, antivirus HTTPS scanning, VPN, DNS, ISP block). v0.3.1 adds a Network check and clearer errors; whether that fixes the reporter's PC is **unconfirmed**.
+- Horizon Client HUD (FPS/CPS/Keystrokes) on Minecraft 1.13+ (not implemented; it works on 1.8–1.12.2 only). Rust mods inside a real launch (only unit-tested).
+- Microsoft sign-in: intentionally not implemented. Offline accounts only (cannot join online-mode servers).
+- The installer is **not code-signed**; Windows SmartScreen will warn.
+
+---
+
+## Earlier notes (history)
 
 آخر تحديث: 2026-11-21
 
