@@ -42,3 +42,11 @@ Microsoft Authentication (حالياً Offline للتجربة فقط)، وضعا
 - **لم يُختبر:** الـ presets على Java 17/21 (1.17+)، لأن الـ agent وطبقة HUD تدعم 1.8–1.12.2 فقط حالياً.
 - **غير مربوط بعد بالواجهة:** Profiles موجودة في `hrc-core` فقط؛ لا شاشة لها في اللانشر ولا أوامر Tauri، والـ Installer لا يشحن `horizon-client.jar` بعد.
 - **غير مبني:** Mod Manager (Modrinth + Fabric)، وقائمة داخل اللعبة، ودعم LWJGL 3.
+
+## Independent environments (Vanilla / Fabric / Quilt / Forge / NeoForge / Horizon Client)
+
+Each instance has its own folder with its own `mods/`, `resourcepacks/`, `shaderpacks/`, worlds and settings. Nothing is shared between environments except the downloaded game files (libraries/assets).
+
+**Verified on CI (commit 92e99dd):** unit tests (folder isolation, mod toggle/list/delete, path-safety); `hrc-cli install` succeeds for Fabric 1.20.1, Quilt 1.20.1, Forge 1.20.1 and 1.12.2, NeoForge 1.21.1, Horizon 1.8.9 and 1.20.1 (the launch profile is created and the version JSON exists); the Tauri app and the TypeScript UI compile; the installer now bundles `horizon-client.jar`.
+
+**NOT verified yet:** actually launching a Fabric/Quilt/Forge/NeoForge game; the new UI screens (Content page, environment tabs, Horizon panel) on a real machine; FPS gains of the performance presets (not benchmarked). The Horizon "Rust mods" and the curated Fabric light-mod downloader (Modrinth) are not built yet — mods are currently added by dropping files into the instance's folder via "Open folder".
