@@ -13,7 +13,9 @@ fps.enabled=true
 cps.enabled=true
 keystrokes.enabled=true
 EOP
-export HRC_EXTRA_JVM="-javaagent:$ROOT/client/target/horizon-client.jar=$GAME"
+FLAGS="$("$ROOT/target/release/hrc-cli" flags balanced)"
+echo "JVM preset flags: $FLAGS"
+export HRC_EXTRA_JVM="$FLAGS -javaagent:$ROOT/client/target/horizon-client.jar=$GAME"
 export LIBGL_ALWAYS_SOFTWARE=1 DISPLAY=:99
 LOG="$OUT/$VER.log"; SHOT="$OUT/$VER.png"
 
@@ -69,5 +71,6 @@ ok=1
 grep -q "\[HorizonClient\] hooked LWJGL 2" "$LOG" && echo "PASS agent hooked" || { echo "FAIL agent hooked"; ok=0; }
 grep -q "\[HorizonClient\] first HUD frame drawn" "$LOG" && echo "PASS hud frame drawn" || { echo "FAIL hud frame drawn"; ok=0; }
 grep -q "overlay disabled after error" "$LOG" && { echo "FAIL overlay error"; ok=0; } || echo "PASS no overlay error"
+grep -qE "Unrecognized VM option|Could not create the Java Virtual Machine|Error: Could not" "$LOG" && { echo "FAIL jvm flags rejected"; ok=0; } || echo "PASS jvm flags accepted"
 [ -s "$SHOT" ] && echo "PASS screenshot" || { echo "FAIL screenshot"; ok=0; }
 [ "$ok" = 1 ]

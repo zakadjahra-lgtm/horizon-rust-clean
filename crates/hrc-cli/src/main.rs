@@ -22,6 +22,12 @@ async fn main() -> hrc_core::Result<()> {
         SetConsoleOutputCP(65001); // UTF-8
     }
     let a: Vec<String> = std::env::args().collect();
+    if a.get(1).map(String::as_str) == Some("flags") {
+        // hrc-cli flags <vanilla|balanced|performance>  → وسائط JVM للـ preset (بدون شبكة)
+        let preset = a.get(2).and_then(|p| hrc_core::perf::PerfPreset::parse(p)).unwrap_or_default();
+        println!("{}", hrc_core::perf::jvm_flags(preset).join(" "));
+        return Ok(());
+    }
     let client = reqwest::Client::builder().user_agent("HorizonRustClean/0.1").build()?;
     let data = data_dir();
     let shared = data.join("shared");

@@ -16,6 +16,9 @@ pub struct Instance {
     pub installed: bool,
     #[serde(default)]
     pub created_unix: u64,
+    /// Profile العميل (HUD + أداء) المرتبط بهذا الـ instance؛ None = بلا تعديلات.
+    #[serde(default)]
+    pub profile_id: Option<String>,
 }
 
 pub fn instances_dir(data: &Path) -> PathBuf {
@@ -23,7 +26,7 @@ pub fn instances_dir(data: &Path) -> PathBuf {
 }
 
 /// المعرّف يأتي من الواجهة، لذا يُقبل فقط بصيغة UUID (حماية من path traversal).
-fn valid_id(id: &str) -> bool {
+pub(crate) fn valid_id(id: &str) -> bool {
     id.len() == 36 && id.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
 }
 
@@ -100,6 +103,7 @@ pub fn create(data: &Path, name: &str, version_id: &str, max_memory_mb: u32) -> 
         java_path: None,
         installed: false,
         created_unix: now_unix(),
+        profile_id: None,
     };
     std::fs::create_dir_all(game_dir(data, &inst.id))?;
     save(data, &inst)?;
@@ -115,6 +119,17 @@ pub fn rename(data: &Path, id: &str, name: &str) -> Result<()> {
 pub fn set_memory(data: &Path, id: &str, mb: u32) -> Result<()> {
     let mut i = load(data, id)?;
     i.max_memory_mb = mb.clamp(512, 65536);
+    save(data, &i)
+}
+
+pub fn set_profile(data: &Path, id: &str, profile_id: Option<String>) -> Result<()> {
+    if let Some(p) = &profile_id {
+        if !valid_id(p) {
+            return err("معرّف profile غير صالح");
+        }
+    }
+    let mut i = load(data, id)?;
+    i.profile_id = profile_id;
     save(data, &i)
 }
 
@@ -211,6 +226,19 @@ mod tests {
         assert_ne!(a.id, b.id);
         assert_eq!(std::fs::read_to_string(game_dir(&d, &b.id).join("options.txt")).unwrap(), "fov:90");
         assert!(b.name.ends_with("(copy)"));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn profile_link_is_per_instance_and_validated() {
+        let d = tmp("e");
+        let a = create(&d, "A", "1.8.9", 2048).unwrap();
+        let b = create(&d, "B", "1.20.1", 2048).unwrap();
+        let pid = "00000000-0000-0000-0000-000000000009".to_string();
+        set_profile(&d, &a.id, Some(pid.clone())).unwrap();
+        assert_eq!(load(&d, &a.id).unwrap().profile_id, Some(pid));
+        assert_eq!(load(&d, &b.id).unwrap().profile_id, None);
+        assert!(set_profile(&d, &a.id, Some("../x".into())).is_err());
         let _ = std::fs::remove_dir_all(&d);
     }
 
