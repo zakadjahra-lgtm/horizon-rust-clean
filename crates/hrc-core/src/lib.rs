@@ -11,6 +11,7 @@ pub mod loader;
 pub mod manifest;
 pub mod modcheck;
 pub mod modrinth;
+pub mod netcheck;
 pub mod perf;
 pub mod platform;
 pub mod profile;

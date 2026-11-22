@@ -31,7 +31,19 @@ async fn main() -> hrc_core::Result<()> {
     }
     let client = reqwest::Client::builder()
         .user_agent("zakadjahra-lgtm/horizon-rust-clean/0.3 (Minecraft launcher CLI)")
+        .connect_timeout(std::time::Duration::from_secs(20))
         .build()?;
+    if a.get(1).map(String::as_str) == Some("netcheck") {
+        // hrc-cli netcheck → يختبر كل الخوادم الرسمية ويعرض سبب أي فشل (للتشخيص)
+        let mut bad = 0;
+        for c in hrc_core::netcheck::run(&client).await {
+            println!("{} {:<24} {}", if c.ok { "OK  " } else { "FAIL" }, c.name, c.detail);
+            if !c.ok {
+                bad += 1;
+            }
+        }
+        std::process::exit(if bad == 0 { 0 } else { 1 });
+    }
     let data = data_dir();
     if a.get(1).map(String::as_str) == Some("mod") {
         // HRC_LOADER=fabric hrc-cli mod <mc-version> <modrinth-slug>  → ينزّل المود + تبعياته إلى mods/ للـ instance
@@ -98,6 +110,7 @@ async fn main() -> hrc_core::Result<()> {
 
             if a[1] == "launch" {
                 let java_path = java_path.expect("java resolved for launch");
+                println!("Java runtime: {}", java_path.display());
                 let ctx = LaunchContext {
                     version,
                     shared_dir: shared,

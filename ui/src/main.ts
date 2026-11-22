@@ -468,6 +468,23 @@ function renderConsole(): HTMLElement {
     consoleEl);
 }
 
+function netCheckCard(): HTMLElement {
+  const out = h('div', {});
+  return h('div', { class: 'card' }, h('h2', {}, 'Network check'),
+    h('p', { class: 'muted' }, 'Tests every official server the launcher needs and shows the real reason if one is unreachable (firewall, antivirus, VPN, DNS).'),
+    h('button', {
+      class: 'btn',
+      onclick: async (e: Event) => {
+        const b = e.target as HTMLButtonElement; b.disabled = true; out.replaceChildren(h('span', { class: 'muted' }, 'Testing…'));
+        try {
+          const r: { name: string; ok: boolean; detail: string }[] = await invoke('net_check');
+          out.replaceChildren(...r.map((c) => h('div', { style: 'padding:3px 0;color:' + (c.ok ? '#6bdc8b' : '#ff6b6b') }, `${c.ok ? '✔' : '✘'} ${c.name} — ${c.detail}`)));
+        } catch (err) { out.replaceChildren(errMsg(err)); }
+        b.disabled = false;
+      },
+    }, 'Run check'), out);
+}
+
 function renderSettings(): HTMLElement {
   const user = h('input', { class: 'input', value: settings.username }) as HTMLInputElement;
   const ram = h('input', { class: 'input', type: 'number', min: 512, step: 256, value: settings.default_ram_mb }) as HTMLInputElement;
@@ -481,6 +498,7 @@ function renderSettings(): HTMLElement {
     h('div', { class: 'card' }, h('h2', {}, 'Default RAM for new instances (MB)'), ram),
     h('div', { class: 'card' }, h('h2', {}, 'Data folder'), h('div', { class: 'row' }, dataDir,
       h('button', { class: 'btn', onclick: () => { void invoke('open_data_folder'); } }, 'Open'))),
+    netCheckCard(),
     h('div', { class: 'row' }, h('button', {
       class: 'btn primary',
       onclick: async () => {

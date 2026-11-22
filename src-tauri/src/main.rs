@@ -452,9 +452,15 @@ async fn install_mod(st: State<'_, AppState>, id: String, project: String) -> Re
         .map_err(es)
 }
 
+#[tauri::command]
+async fn net_check(st: State<'_, AppState>) -> Result<Vec<hrc_core::netcheck::Check>, String> {
+    Ok(hrc_core::netcheck::run(&st.client).await)
+}
+
 fn main() {
     let client = reqwest::Client::builder()
         .user_agent(concat!("zakadjahra-lgtm/horizon-rust-clean/", env!("CARGO_PKG_VERSION"), " (Minecraft launcher)"))
+        .connect_timeout(std::time::Duration::from_secs(20))
         .build()
         .expect("http client");
     let state = AppState {
@@ -469,6 +475,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             list_versions,
             curated_mods,
+            net_check,
             search_mods,
             install_mod,
             list_instances,

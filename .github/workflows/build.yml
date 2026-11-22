@@ -214,3 +214,52 @@ jobs:
           out=$(target/release/hrc-cli mod ${{ matrix.mc }} ${{ matrix.mod }})
           echo "$out"
           echo "$out" | grep -q "\.jar" || { echo "no jar installed"; exit 1; }
+
+  # تشغيل Minecraft فعلياً (نافذة + بقاء العملية حيّة + لقطة) لكل loader وإصدار، مع Java Runtime تلقائي
+  launch-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: vanilla, version: "1.8.9" }
+          - { loader: vanilla, version: "1.12.2" }
+          - { loader: vanilla, version: "1.16.5" }
+          - { loader: vanilla, version: "1.20.1" }
+          - { loader: vanilla, version: "1.21.1" }
+          - { loader: fabric, version: "1.20.1" }
+          - { loader: fabric, version: "1.21.1" }
+          - { loader: quilt, version: "1.20.1" }
+          - { loader: forge, version: "1.12.2" }
+          - { loader: forge, version: "1.16.5" }
+          - { loader: forge, version: "1.20.1" }
+          - { loader: neoforge, version: "1.21.1" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb x11-utils imagemagick \
+            libxxf86vm1 libxcursor1 libxrandr2 libxi6 libxext6 libxrender1 libxtst6 libgl1 libgl1-mesa-dri libglx-mesa0 \
+            libglu1-mesa libopenal1 libfontconfig1 libfreetype6 fonts-dejavu-core xserver-xorg-core xserver-xorg-video-dummy x11-xserver-utils
+      - name: Build CLI
+        run: cargo build --release -p hrc-cli
+      - name: Launch ${{ matrix.loader }} ${{ matrix.version }}
+        run: ci/launch-smoke.sh ${{ matrix.loader }} ${{ matrix.version }} 300
+      - name: Publish screenshot and log to branch ci-shots-${{ matrix.loader }}-${{ matrix.version }}
+        if: always()
+        run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@users.noreply.github.com"
+          d=$(mktemp -d)
+          cp ci-out/* "$d"/ 2>/dev/null || true
+          cd "$d"
+          git init -q -b shots
+          git add -A
+          git commit -q -m "shots ${{ matrix.loader }} ${{ matrix.version }} ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" shots:refs/heads/ci-shots-${{ matrix.loader }}-${{ matrix.version }}
