@@ -130,7 +130,7 @@ pub fn pick_version(list_json: &str) -> Result<String> {
 }
 
 pub async fn latest_loader_version(client: &reqwest::Client, l: Loader, mc: &str) -> Result<String> {
-    let text = client.get(versions_url(l, mc)?).send().await?.error_for_status()?.text().await?;
+    let text = get_text(client, &(versions_url(l, mc)?)).await?;
     pick_version(&text)
 }
 
@@ -161,7 +161,7 @@ pub async fn install_loader_profile(
     mc: &str,
     loader_version: &str,
 ) -> Result<String> {
-    let text = client.get(profile_url(l, mc, loader_version)?).send().await?.error_for_status()?.text().await?;
+    let text = get_text(client, &(profile_url(l, mc, loader_version)?)).await?;
     let id = profile_id(&text, mc)?;
     let dest = shared.join("versions").join(&id).join(format!("{id}.json"));
     if let Some(p) = dest.parent() {
@@ -193,7 +193,30 @@ pub fn pick_forge(promos_json: &str, mc: &str) -> Result<String> {
 /// NeoForge يرقّم إصداراته بحسب Minecraft: 1.21.1 ← `21.1.x` و1.21 ← `21.0.x`.
 pub fn neoforge_prefix(mc: &str) -> Option<String> {
     let (major, minor, patch) = crate::perf::parse_mc_version(mc)?;
-    (major == 1).then(|| format!("{minor}.{patch}."))
+    match major {
+        1 => Some(format!("{minor}.{patch}.")),
+        // نظام الترقيم الجديد: Minecraft 26.3 ← NeoForge 26.3.0.x (يطابق installer المرفق neoforge-26.3.0.115)
+        m if m >= 26 => Some(format!("{m}.{minor}.{patch}.")),
+        _ => None,
+    }
+}
+
+/// GET نصي مع 3 محاولات (يخفف انقطاعات الشبكة العابرة).
+async fn get_text(client: &reqwest::Client, url: &str) -> Result<String> {
+    let mut last = None;
+    for attempt in 0..3u64 {
+        if attempt > 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(800 * attempt)).await;
+        }
+        match client.get(url).send().await.and_then(|r| r.error_for_status()) {
+            Ok(r) => match r.text().await {
+                Ok(t) => return Ok(t),
+                Err(e) => last = Some(e),
+            },
+            Err(e) => last = Some(e),
+        }
+    }
+    Err(last.map(Error::from).unwrap_or_else(|| Error::Msg("request failed".into())))
 }
 
 fn numeric_key(v: &str) -> Vec<u64> {
@@ -271,7 +294,7 @@ pub async fn run_installer(client: &reqwest::Client, shared: &Path, l: Loader, m
         Loader::Neoforge => (neoforge_installer_url(ver)?, format!("neoforge-{ver}-installer.jar"), "neoforge"),
         _ => return err("هذا النوع لا يستخدم installer"),
     };
-    let sha1_text = client.get(format!("{url}.sha1")).send().await?.error_for_status()?.text().await?;
+    let sha1_text = get_text(client, &(format!("{url}.sha1"))).await?;
     let sha1 = sha1_text.split_whitespace().next().unwrap_or("").to_ascii_lowercase();
     if sha1.len() != 40 || !sha1.chars().all(|c| c.is_ascii_hexdigit()) {
         return err("تعذّر الحصول على SHA1 رسمي للـ installer");
@@ -327,13 +350,13 @@ pub async fn install(client: &reqwest::Client, shared: &Path, l: Loader, mc: &st
             Ok(Installed { loader_version: Some(v), launch_id: id })
         }
         Loader::Forge => {
-            let text = client.get(FORGE_PROMOS).send().await?.error_for_status()?.text().await?;
+            let text = get_text(client, &(FORGE_PROMOS)).await?;
             let v = pick_forge(&text, mc)?;
             let id = run_installer(client, shared, l, mc, &v, java).await?;
             Ok(Installed { loader_version: Some(v), launch_id: id })
         }
         Loader::Neoforge => {
-            let text = client.get(NEOFORGE_VERSIONS).send().await?.error_for_status()?.text().await?;
+            let text = get_text(client, &(NEOFORGE_VERSIONS)).await?;
             let v = pick_neoforge(&text, mc)?;
             let id = run_installer(client, shared, l, mc, &v, java).await?;
             Ok(Installed { loader_version: Some(v), launch_id: id })
@@ -412,6 +435,8 @@ mod tests {
         assert_eq!(neoforge_prefix("1.21.1").as_deref(), Some("21.1."));
         assert_eq!(neoforge_prefix("1.21").as_deref(), Some("21.0."));
         assert_eq!(neoforge_prefix("24w01a"), None);
+        assert_eq!(neoforge_prefix("26.3").as_deref(), Some("26.3.0."));
+        assert_eq!(pick_neoforge(r#"{"versions":["26.3.0.115","26.3.1.2","26.2.0.9"]}"#, "26.3").unwrap(), "26.3.0.115");
         assert_eq!(pick_neoforge(j, "1.21.1").unwrap(), "21.1.172"); // 172 > 100 > 9 رقمياً، وبلا beta
         assert_eq!(pick_neoforge(j, "1.21").unwrap(), "21.0.5");
         assert!(pick_neoforge(j, "1.20.1").is_err());

@@ -37,6 +37,8 @@ pub struct Item {
     pub enabled: bool,
     pub size: u64,
     pub is_dir: bool,
+    /// تحذير توافق (للمودات فقط): loader خاطئ أو إصدار Minecraft غير مدعوم.
+    pub warning: Option<String>,
 }
 
 pub fn dir(game_dir: &Path, kind: Kind) -> PathBuf {
@@ -78,16 +80,32 @@ pub fn list(game_dir: &Path, kind: Kind) -> Result<Vec<Item>> {
                 continue;
             }
             if let Some(base) = file.strip_suffix(".jar.disabled") {
-                out.push(Item { name: format!("{base}.jar"), enabled: false, size: meta.len(), is_dir: false });
+                out.push(Item { name: format!("{base}.jar"), enabled: false, size: meta.len(), is_dir: false, warning: None });
             } else if file.ends_with(".jar") {
-                out.push(Item { name: file, enabled: true, size: meta.len(), is_dir: false });
+                out.push(Item { name: file, enabled: true, size: meta.len(), is_dir: false, warning: None });
             }
         } else if is_dir || file.ends_with(".zip") {
-            out.push(Item { name: file, enabled: true, size: if is_dir { 0 } else { meta.len() }, is_dir });
+            out.push(Item { name: file, enabled: true, size: if is_dir { 0 } else { meta.len() }, is_dir, warning: None });
         }
     }
     out.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     Ok(out)
+}
+
+/// مثل `list` لكن مع فحص توافق كل مود مع الـ loader وإصدار Minecraft.
+pub fn list_checked(game_dir: &Path, kind: Kind, loader: Loader, mc: &str) -> Result<Vec<Item>> {
+    let mut items = list(game_dir, kind)?;
+    if kind == Kind::Mods {
+        if let Some(ml) = loader.mods_loader(mc) {
+            for it in items.iter_mut() {
+                let d = dir(game_dir, Kind::Mods);
+                let on = d.join(&it.name);
+                let path = if on.exists() { on } else { d.join(format!("{}.disabled", it.name)) };
+                it.warning = crate::modcheck::check(&path, ml, mc);
+            }
+        }
+    }
+    Ok(items)
 }
 
 /// تشغيل/إطفاء مود (المودات فقط). `name` هو الاسم الأساسي `x.jar`.
@@ -160,7 +178,7 @@ mod tests {
         std::fs::write(d.join("mods/sodium.jar"), b"x").unwrap();
         std::fs::write(d.join("mods/readme.txt"), b"x").unwrap(); // يُتجاهل
         let l = list(&d, Kind::Mods).unwrap();
-        assert_eq!(l, vec![Item { name: "sodium.jar".into(), enabled: true, size: 1, is_dir: false }]);
+        assert_eq!(l, vec![Item { name: "sodium.jar".into(), enabled: true, size: 1, is_dir: false, warning: None }]);
         set_mod_enabled(&d, "sodium.jar", false).unwrap();
         assert!(d.join("mods/sodium.jar.disabled").is_file() && !d.join("mods/sodium.jar").exists());
         let l = list(&d, Kind::Mods).unwrap();

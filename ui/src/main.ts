@@ -6,7 +6,7 @@ interface Instance {
   java_path: string | null; installed: boolean; created_unix: number;
   loader: string; loader_version: string | null; launch_id: string | null;
 }
-interface ContentItem { name: string; enabled: boolean; size: number; is_dir: boolean }
+interface ContentItem { name: string; enabled: boolean; size: number; is_dir: boolean; warning: string | null }
 interface ClientProfile {
   id: string; name: string; hud_scale: number; perf: string; rust_mods: Record<string, boolean>;
   mods: Record<string, { enabled: boolean; x: number; y: number }>;
@@ -273,7 +273,7 @@ function instanceCard(i: Instance): HTMLElement {
           if (v !== null) { await invoke('set_instance_ram', { id: i.id, mb: Number(v) || 2048 }); await refreshInstances(); render(); }
         }),
         act('Duplicate', async () => { await invoke('duplicate_instance', { id: i.id }); await refreshInstances(); toast('Duplicated'); render(); }),
-        act(i.installed ? 'Reinstall' : 'Install', async () => {
+        act(i.installed ? 'Update / Reinstall' : 'Install', async () => {
           installing.add(i.id); go('downloads');
           try { await invoke('install_instance', { id: i.id }); sys('Installed ' + i.version_id); toast('Installed'); }
           finally { installing.delete(i.id); await refreshInstances(); render(); }
@@ -314,7 +314,8 @@ function contentSection(inst: Instance, kind: string, title: string, note: strin
         await reload();
       },
     }) : null,
-    h('span', { class: 'grow' }, it.name + (it.is_dir ? '  (folder)' : '')),
+    h('span', { class: 'grow' }, it.name + (it.is_dir ? '  (folder)' : ''),
+      it.warning ? h('div', { style: 'color:#ff6b6b;font-size:12px' }, '⚠ ' + it.warning) : null),
     h('span', { class: 'muted' }, it.is_dir ? '' : fmtBytes(it.size)),
     h('button', {
       class: 'btn danger',

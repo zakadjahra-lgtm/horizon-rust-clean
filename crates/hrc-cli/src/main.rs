@@ -41,8 +41,8 @@ async fn main() -> hrc_core::Result<()> {
         let game = data.join("instances").join(format!("cli-{}-{mc}", l.label().split_whitespace().next().unwrap_or("x").to_lowercase()));
         let got = hrc_core::modrinth::install_mod(&client, &game, slug, l, mc).await?;
         println!("Installed mods: {}", got.join(", "));
-        for it in hrc_core::content::list(&game, hrc_core::content::Kind::Mods)? {
-            println!("  {} ({} bytes, enabled={})", it.name, it.size, it.enabled);
+        for it in hrc_core::content::list_checked(&game, hrc_core::content::Kind::Mods, l, mc)? {
+            println!("  {} ({} bytes, enabled={}) {}", it.name, it.size, it.enabled, it.warning.map(|w| format!("WARNING: {w}")).unwrap_or_else(|| "compatible".into()));
         }
         return Ok(());
     }

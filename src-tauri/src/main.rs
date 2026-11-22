@@ -390,8 +390,8 @@ fn content_kind(k: &str) -> Result<content::Kind, String> {
 
 #[tauri::command]
 async fn list_content(st: State<'_, AppState>, id: String, kind: String) -> Result<Vec<content::Item>, String> {
-    instance::load(&st.data, &id).map_err(es)?;
-    content::list(&instance::game_dir(&st.data, &id), content_kind(&kind)?).map_err(es)
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    content::list_checked(&instance::game_dir(&st.data, &id), content_kind(&kind)?, inst.loader, &inst.version_id).map_err(es)
 }
 
 #[tauri::command]

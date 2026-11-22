@@ -6,4 +6,4 @@ edition.workspace = true
 [dependencies]
 hrc-core = { path = "../hrc-core" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "rustls-tls-native-roots"] }
