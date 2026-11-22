@@ -39,14 +39,19 @@ jobs:
         run: |
           npm install
           npm run build
+      - name: Build Horizon Client (Java agent)
+        run: mvn -B -q -f client/pom.xml package
       - name: Build app and CLI (release)
         run: cargo build --release -p hrc-app -p hrc-cli
+      - name: Place agent next to the exe
+        shell: pwsh
+        run: Copy-Item client\target\horizon-client.jar target\release\horizon-client.jar
       - name: Build installer (Inno Setup)
         shell: pwsh
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
-          & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" installer\horizon.iss
+          & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" "/DAgentJar=..\target\release\horizon-client.jar" installer\horizon.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Get-ChildItem installer\Output
       - uses: actions/upload-artifact@v4
@@ -55,6 +60,7 @@ jobs:
           path: |
             target/release/horizon-rust-clean.exe
             target/release/hrc-cli.exe
+            target/release/horizon-client.jar
             installer/Output/HorizonRustClean-Setup.exe
 
   # تشغيل حقيقي للعبة تحت شاشة افتراضية مع Horizon Client، ثم لقطة شاشة تُرفع لفرع ci-shots-<version>

@@ -4,6 +4,12 @@
 interface Instance {
   id: string; name: string; version_id: string; max_memory_mb: number;
   java_path: string | null; installed: boolean; created_unix: number;
+  loader: string; loader_version: string | null; launch_id: string | null;
+}
+interface ContentItem { name: string; enabled: boolean; size: number; is_dir: boolean }
+interface ClientProfile {
+  id: string; name: string; hud_scale: number; perf: string;
+  mods: Record<string, { enabled: boolean; x: number; y: number }>;
 }
 interface VersionInfo { id: string; kind: string }
 interface Settings { username: string; default_ram_mb: number; java_path: string | null }
@@ -20,7 +26,21 @@ const listen = (ev: string, cb: (payload: any) => void): void => {
 let instances: Instance[] = [];
 let versions: VersionInfo[] = [];
 let settings: Settings = { username: 'Player', default_ram_mb: 2048, java_path: null };
+// كل نوع بيئة = instances مستقلة بمجلداتها (مودات/حزم موارد/shaders) ولا تتشارك شيئاً.
+const LOADERS = [
+  { id: 'vanilla', label: 'Vanilla', hint: 'Original Minecraft, no mods. Resource packs work; shaders need a shader mod.' },
+  { id: 'fabric', label: 'Fabric', hint: 'Lightweight mod loader (Minecraft 1.14 and newer). Mods stay inside this instance only.' },
+  { id: 'quilt', label: 'Quilt', hint: 'Fabric-compatible mod loader (Minecraft 1.14 and newer).' },
+  { id: 'forge', label: 'Forge', hint: 'Installed with Forge\'s official installer; the first install can take a few minutes.' },
+  { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
+  { id: 'horizon', label: 'Horizon Client (beta)', hint: 'Our clean client (beta). HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
+];
+const loaderLabel = (id: string): string => LOADERS.find((l) => l.id === id)?.label ?? id;
+const supportsMods = (id: string): boolean => ['fabric', 'quilt', 'forge', 'neoforge'].includes(id);
+
 let page = 'home';
+let filterLoader = 'all';
+let contentFor: string | null = null;
 let selected: string | null = null;
 const running = new Set<string>();
 const installing = new Set<string>();
@@ -179,6 +199,13 @@ function renderInstances(): HTMLElement {
   const name = h('input', { class: 'input', value: 'My instance', style: 'width:200px' }) as HTMLInputElement;
   const ram = h('input', { class: 'input', type: 'number', min: 512, step: 256, value: settings.default_ram_mb, style: 'width:110px' }) as HTMLInputElement;
   const verSel = h('select', { class: 'input' }, h('option', { value: '' }, 'Loading versions…')) as HTMLSelectElement;
+  const loaderSel = h('select', { class: 'input', style: 'min-width:200px' },
+    ...LOADERS.map((l) => h('option', { value: l.id }, l.label))) as HTMLSelectElement;
+  if (filterLoader !== 'all') loaderSel.value = filterLoader;
+  const hint = h('p', { class: 'muted', style: 'margin:8px 0 0' }, '');
+  const setHint = (): void => { hint.textContent = LOADERS.find((l) => l.id === loaderSel.value)?.hint ?? ''; };
+  loaderSel.addEventListener('change', setHint);
+  setHint();
   const kinds: Record<string, boolean> = { release: true, snapshot: false, old_beta: false, old_alpha: false };
   const fill = (): void => {
     verSel.replaceChildren(...versions.filter((v) => kinds[v.kind])
@@ -190,20 +217,30 @@ function renderInstances(): HTMLElement {
   void ensureVersions().then((ok) => { if (ok) fill(); else verSel.replaceChildren(h('option', { value: '' }, 'Offline — retry later')); });
 
   wrap.append(h('div', { class: 'card' }, h('h2', {}, 'New instance'),
-    h('div', { class: 'row' }, name, verSel, ram, h('span', { class: 'muted' }, 'MB'),
+    h('div', { class: 'row' }, name, loaderSel, verSel, ram, h('span', { class: 'muted' }, 'MB'),
       h('button', {
         class: 'btn primary',
         onclick: async () => {
           try {
-            const created: Instance = await invoke('create_instance', { name: name.value, versionId: verSel.value, maxMemoryMb: Number(ram.value) || 2048 });
+            const created: Instance = await invoke('create_instance', { name: name.value, versionId: verSel.value, maxMemoryMb: Number(ram.value) || 2048, loader: loaderSel.value });
             await refreshInstances(); selected = created.id; saveSel(); toast('Instance created'); render();
           } catch (e) { toast(errMsg(e), true); }
         },
       }, 'Create')),
+    hint,
     h('div', { class: 'row', style: 'margin-top:10px' }, ...chks),
     h('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Beta/Alpha versions are old and may not run on modern systems.')));
 
-  for (const i of instances) wrap.append(instanceCard(i));
+  // تبويبات: كل بيئة لها مكانها
+  const tabs = h('div', { class: 'row', style: 'margin:6px 0 14px' },
+    ...[{ id: 'all', label: 'All' }, ...LOADERS].map((l) => h('button', {
+      class: 'btn' + (filterLoader === l.id ? ' primary' : ''),
+      onclick: () => { filterLoader = l.id; render(); },
+    }, l.label.replace(' (beta)', ''))));
+  wrap.append(tabs);
+  const shown = instances.filter((i) => filterLoader === 'all' || i.loader === filterLoader);
+  if (shown.length === 0) wrap.append(h('p', { class: 'muted' }, 'No instances in this environment yet.'));
+  for (const i of shown) wrap.append(instanceCard(i));
   return wrap;
 }
 
@@ -219,9 +256,11 @@ function instanceCard(i: Instance): HTMLElement {
       h('div', { class: 'grow' },
         h('h2', { style: 'margin:0' }, i.name),
         h('div', { class: 'muted' }, `Minecraft ${i.version_id} · ${i.max_memory_mb} MB RAM `,
+          h('span', { class: 'badge' }, loaderLabel(i.loader)), ' ',
           h('span', { class: 'badge ' + (i.installed ? 'ok' : '') }, i.installed ? 'installed' : 'not installed'))),
       h('div', { class: 'row' },
         act('Select', async () => { selected = i.id; saveSel(); go('home'); }),
+        h('button', { class: 'btn', onclick: () => { contentFor = i.id; go('content'); } }, 'Content'),
         act('Rename', async () => {
           const n = await askText('Rename instance', i.name);
           if (n !== null) { await invoke('rename_instance', { id: i.id, name: n }); await refreshInstances(); render(); }
@@ -238,10 +277,90 @@ function instanceCard(i: Instance): HTMLElement {
         }),
         act('Open folder', async () => { await invoke('open_instance_folder', { id: i.id }); }),
         act('Delete', async () => {
-          if (await askConfirm('Delete instance', `Delete "${i.name}" with its worlds and settings? Shared game files are kept.`)) {
+          if (await askConfirm('Delete instance', `Delete "${i.name}" with its worlds, mods and settings? Shared game files are kept.`)) {
             await invoke('delete_instance', { id: i.id }); await refreshInstances(); render();
           }
         }, 'danger'))));
+}
+
+// ───────────── صفحة Content: مودات / حزم موارد / shaders لكل instance ─────────────
+function renderContent(): HTMLElement {
+  const inst = instances.find((i) => i.id === contentFor);
+  const wrap = h('div', {}, h('button', { class: 'btn', onclick: () => go('instances') }, '← Instances'));
+  if (!inst) { wrap.append(h('p', { class: 'muted' }, 'Instance not found.')); return wrap; }
+  wrap.append(h('h1', { style: 'margin-top:14px' }, inst.name),
+    h('p', { class: 'muted' }, `${loaderLabel(inst.loader)} · Minecraft ${inst.version_id} — files here belong to this instance only.`));
+  if (inst.loader === 'horizon') wrap.append(clientPanel(inst));
+  if (supportsMods(inst.loader)) {
+    wrap.append(contentSection(inst, 'mods', 'Mods', 'The checkbox turns a mod on or off without deleting it. Changes apply the next time you launch.'));
+  }
+  wrap.append(contentSection(inst, 'resourcepacks', 'Resource packs', 'Enable them in game: Options → Resource Packs.'));
+  wrap.append(contentSection(inst, 'shaderpacks', 'Shader packs', 'Shaders need a shader mod such as Iris (Fabric / Quilt / NeoForge) installed in this instance.'));
+  return wrap;
+}
+
+function contentSection(inst: Instance, kind: string, title: string, note: string): HTMLElement {
+  const list = h('div', {}, h('span', { class: 'muted' }, 'Loading…'));
+  const row = (it: ContentItem): HTMLElement => h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line)' },
+    kind === 'mods' ? h('input', {
+      type: 'checkbox', checked: it.enabled,
+      onchange: async (e: Event) => {
+        try { await invoke('toggle_mod', { id: inst.id, name: it.name, enabled: (e.target as HTMLInputElement).checked }); }
+        catch (err) { toast(errMsg(err), true); }
+        await reload();
+      },
+    }) : null,
+    h('span', { class: 'grow' }, it.name + (it.is_dir ? '  (folder)' : '')),
+    h('span', { class: 'muted' }, it.is_dir ? '' : fmtBytes(it.size)),
+    h('button', {
+      class: 'btn danger',
+      onclick: async () => {
+        if (!(await askConfirm('Delete', `Delete "${it.name}"?`))) return;
+        try { await invoke('delete_content', { id: inst.id, kind, name: it.name }); } catch (err) { toast(errMsg(err), true); }
+        await reload();
+      },
+    }, 'Delete'));
+  const reload = async (): Promise<void> => {
+    try {
+      const items: ContentItem[] = await invoke('list_content', { id: inst.id, kind });
+      list.replaceChildren(...(items.length === 0
+        ? [h('span', { class: 'muted' }, 'Nothing here yet. Use "Open folder" and drop files in.')]
+        : items.map(row)));
+    } catch (e) { list.replaceChildren(errMsg(e)); }
+  };
+  void reload();
+  return h('div', { class: 'card' },
+    h('div', { class: 'row' }, h('h2', { class: 'grow', style: 'margin:0' }, title),
+      h('button', { class: 'btn', onclick: () => { void invoke('open_content_folder', { id: inst.id, kind }).catch((e) => toast(errMsg(e), true)); } }, 'Open folder')),
+    h('p', { class: 'muted' }, note), list);
+}
+
+function clientPanel(inst: Instance): HTMLElement {
+  const box = h('div', { class: 'card' }, h('h2', {}, 'Horizon Client (beta)'), h('span', { class: 'muted' }, 'Loading…'));
+  const legacy = /^1\.(8|9|10|11|12)(\.|$)/.test(inst.version_id);
+  void invoke('get_client_profile', { id: inst.id }).then((p: ClientProfile) => {
+    const labels: Record<string, string> = { fps: 'FPS counter', cps: 'CPS counter', keystrokes: 'Keystrokes' };
+    const rows = Object.keys(labels).map((k) => h('label', { class: 'chk', style: 'display:flex;margin:6px 0' },
+      h('input', { type: 'checkbox', checked: p.mods[k]?.enabled, disabled: !legacy, onchange: (e: Event) => { p.mods[k].enabled = (e.target as HTMLInputElement).checked; } }),
+      `${labels[k]} (beta)`));
+    const perf = h('select', { class: 'input', onchange: (e: Event) => { p.perf = (e.target as HTMLSelectElement).value; } },
+      ...['vanilla', 'balanced', 'performance'].map((v) => h('option', { value: v, selected: p.perf === v }, v)));
+    box.replaceChildren(
+      h('h2', {}, 'Horizon Client (beta)'),
+      h('p', { class: 'muted' }, legacy
+        ? 'These HUD modules run inside Minecraft 1.8–1.12.2. All are off by default; changes apply on the next launch.'
+        : 'HUD modules are available for Minecraft 1.8–1.12.2 only for now. This version runs on a Fabric base; the performance preset still applies.'),
+      ...rows,
+      h('div', { class: 'row', style: 'margin-top:8px' }, h('span', { class: 'muted' }, 'Performance preset (JVM flags, not benchmarked):'), perf),
+      h('div', { class: 'row end' }, h('button', {
+        class: 'btn primary',
+        onclick: async () => {
+          try { await invoke('save_client_profile', { id: inst.id, profile: p }); toast('Saved'); }
+          catch (e) { toast(errMsg(e), true); }
+        },
+      }, 'Save')));
+  }).catch((e) => box.replaceChildren(h('h2', {}, 'Horizon Client (beta)'), h('p', { class: 'muted' }, errMsg(e))));
+  return box;
 }
 
 function renderDownloads(): HTMLElement {
@@ -327,10 +446,10 @@ function renderSettings(): HTMLElement {
 function render(): void {
   consoleEl = null;
   document.querySelectorAll('.nav button').forEach((b) =>
-    b.classList.toggle('active', (b as HTMLElement).dataset.page === page));
+    b.classList.toggle('active', (b as HTMLElement).dataset.page === (page === 'content' ? 'instances' : page)));
   const pages: Record<string, () => HTMLElement> = {
     home: renderHome, instances: renderInstances, downloads: renderDownloads,
-    java: renderJava, console: renderConsole, settings: renderSettings,
+    java: renderJava, console: renderConsole, settings: renderSettings, content: renderContent,
   };
   view.replaceChildren((pages[page] ?? renderHome)());
   updateProgress();

@@ -38,6 +38,7 @@ Name: "addtopath"; Description: "Add hrc-cli to PATH (use it from any terminal)"
 [Files]
 Source: "{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#CliExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#AgentJar}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\STATUS.md"; DestDir: "{app}"; Flags: ignoreversion

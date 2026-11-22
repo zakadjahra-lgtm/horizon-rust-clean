@@ -4,11 +4,13 @@
 use hrc_core::download::Progress;
 use hrc_core::instance::{self, Instance};
 use hrc_core::launch::{build_command, offline_uuid, spawn, AuthSession, LaunchContext};
+use hrc_core::loader::{self, Loader};
 use hrc_core::manifest::Manifest;
 use hrc_core::platform::{data_dir, Os};
 use hrc_core::rules::Features;
+use hrc_core::profile::{self, Profile};
 use hrc_core::settings::{self, Settings};
-use hrc_core::{install, java};
+use hrc_core::{content, install, java, perf};
 use serde::Serialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -144,44 +146,56 @@ async fn do_install(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Stri
 
     instance::set_installed(&st.data, id, false).map_err(es)?;
     install::install_version_json(&st.client, &shared, &entry).await.map_err(es)?;
-    let version = install::load_version(&shared, &inst.version_id).map_err(es)?;
+    let vanilla = install::load_version(&shared, &inst.version_id).map_err(es)?;
+    content::ensure_dirs(&instance::game_dir(&st.data, id), inst.loader).map_err(es)?;
 
     // natives تُعاد من الصفر لكل تثبيت/إعادة تثبيت (الملفات التالفة تُصلَح عبر SHA1)
     let natives = instance::natives_dir(&st.data, id);
     let _ = tokio::fs::remove_dir_all(&natives).await;
 
-    let progress = Arc::new(Progress::default());
-    let stop = start_poller(app.clone(), progress.clone(), "game");
-    let r = install::install_game_files(
-        &st.client,
-        &shared,
-        &version,
-        &natives,
-        Os::current(),
-        &Features::default(),
-        progress.clone(),
-    )
-    .await;
-    stop.store(true, Ordering::Relaxed);
-    r.map_err(es)?;
-
-    // Java المناسب يُحمَّل الآن حتى يكون Play سريعاً لاحقاً
+    // Java أولاً: يحتاجه تشغيل installer الخاص بـ Forge/NeoForge أيضاً
     let jp = Arc::new(Progress::default());
     let stop = start_poller(app.clone(), jp.clone(), "java");
     let manual = manual_java(&inst, st);
-    let r = java::resolve(
-        &st.client,
-        &st.data,
-        manual.as_deref().map(Path::new),
-        version.java_component(),
-        jp,
-    )
+    let r = java::resolve(&st.client, &st.data, manual.as_deref().map(Path::new), vanilla.java_component(), jp).await;
+    stop.store(true, Ordering::Relaxed);
+    let java_path = r.map_err(es)?;
+
+    let progress = Arc::new(Progress::default());
+    let stop = start_poller(app.clone(), progress.clone(), "game");
+    let result: hrc_core::Result<loader::Installed> = async {
+        if loader::needs_vanilla_first(inst.loader) {
+            install::install_game_files(&st.client, &shared, &vanilla, &natives, Os::current(), &Features::default(), progress.clone()).await?;
+        }
+        let installed = loader::install(&st.client, &shared, inst.loader, &inst.version_id, &java_path).await?;
+        let version = install::load_version(&shared, &installed.launch_id)?;
+        install::install_game_files(&st.client, &shared, &version, &natives, Os::current(), &Features::default(), progress.clone()).await?;
+        Ok(installed)
+    }
     .await;
     stop.store(true, Ordering::Relaxed);
-    r.map_err(es)?;
+    let installed = result.map_err(es)?;
 
+    instance::set_launch(&st.data, id, installed.loader_version, installed.launch_id).map_err(es)?;
     instance::set_installed(&st.data, id, true).map_err(es)?;
     Ok(())
+}
+
+/// ملف الـ Java agent بجانب الـ EXE (يشحنه الـ Installer).
+fn agent_jar() -> Option<PathBuf> {
+    Some(std::env::current_exe().ok()?.parent()?.join("horizon-client.jar"))
+}
+
+/// Profile الخاص بهذا الـ instance (يُنشأ نظيفاً عند أول استخدام ويُربط به).
+fn ensure_profile(st: &AppState, inst: &Instance) -> Result<Profile, String> {
+    if let Some(pid) = &inst.profile_id {
+        if let Ok(p) = profile::load(&st.data, pid) {
+            return Ok(p);
+        }
+    }
+    let p = profile::create(&st.data, &inst.name).map_err(es)?;
+    instance::set_profile(&st.data, &inst.id, Some(p.id.clone())).map_err(es)?;
+    Ok(p)
 }
 
 async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), String> {
@@ -191,7 +205,7 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
     }
     let s = settings::load(&st.data);
     let shared = st.data.join("shared");
-    let version = install::load_version(&shared, &inst.version_id).map_err(es)?;
+    let version = install::load_version(&shared, inst.launch_version_id()).map_err(es)?;
 
     let manual = manual_java(&inst, st);
     let java_path = java::resolve(
@@ -204,25 +218,43 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
     .await
     .map_err(es)?;
 
+    let sys = |line: String| {
+        let _ = app.emit("console", ConsoleLine { id: id.to_string(), err: false, line });
+    };
+
+    // Vanilla/Fabric/Quilt/Forge/NeoForge: بلا أي إضافات. Horizon Client فقط: preset الأداء + agent الـ HUD.
+    let game_dir = instance::game_dir(&st.data, id);
+    let mut extra: Vec<String> = Vec::new();
+    if inst.loader == Loader::Horizon {
+        let prof = ensure_profile(st, &inst)?;
+        extra.extend(perf::jvm_flags(prof.perf));
+        if perf::legacy_hud_supported(&inst.version_id) {
+            match agent_jar().and_then(|j| profile::agent_arg(&j, &game_dir, &inst.version_id)) {
+                Some(arg) => {
+                    profile::write_client_config(&game_dir, &prof).map_err(es)?;
+                    extra.push(arg);
+                }
+                None => sys("[launcher] horizon-client.jar not found next to the app — HUD disabled".into()),
+            }
+        }
+    }
+
     let ctx = LaunchContext {
         version,
         shared_dir: shared,
-        game_dir: instance::game_dir(&st.data, id),
+        game_dir,
         natives_dir: instance::natives_dir(&st.data, id),
         java_path: java_path.clone(),
         auth: AuthSession::offline(&s.username, &offline_uuid(&s.username)),
         max_memory_mb: inst.max_memory_mb,
         min_memory_mb: 512,
-        extra_jvm_args: vec![],
+        extra_jvm_args: extra,
         features: Features::default(),
         os: Os::current(),
     };
     let cmd = build_command(&ctx).map_err(es)?;
 
-    let sys = |line: String| {
-        let _ = app.emit("console", ConsoleLine { id: id.to_string(), err: false, line });
-    };
-    sys(format!("[launcher] {} ({}) — java: {}", inst.name, inst.version_id, java_path.display()));
+    sys(format!("[launcher] {} [{}] ({}) — java: {}", inst.name, inst.loader.label(), inst.launch_version_id(), java_path.display()));
 
     let app2 = app.clone();
     let id2 = id.to_string();
@@ -276,8 +308,13 @@ async fn create_instance(
     name: String,
     version_id: String,
     max_memory_mb: u32,
+    loader: Option<String>,
 ) -> Result<Instance, String> {
-    instance::create(&st.data, &name, &version_id, max_memory_mb).map_err(es)
+    let kind = match loader.as_deref() {
+        None | Some("") => Loader::Vanilla,
+        Some(l) => Loader::parse(l).ok_or_else(|| format!("Unknown environment type: {l}"))?,
+    };
+    instance::create_with(&st.data, &name, &version_id, max_memory_mb, kind).map_err(es)
 }
 
 #[tauri::command]
@@ -342,6 +379,54 @@ async fn java_info(st: State<'_, AppState>) -> Result<JavaInfo, String> {
     })
 }
 
+// ───────────── محتوى كل instance + إعدادات Horizon Client ─────────────
+
+fn content_kind(k: &str) -> Result<content::Kind, String> {
+    content::Kind::parse(k).ok_or_else(|| format!("Unknown content type: {k}"))
+}
+
+#[tauri::command]
+async fn list_content(st: State<'_, AppState>, id: String, kind: String) -> Result<Vec<content::Item>, String> {
+    instance::load(&st.data, &id).map_err(es)?;
+    content::list(&instance::game_dir(&st.data, &id), content_kind(&kind)?).map_err(es)
+}
+
+#[tauri::command]
+async fn toggle_mod(st: State<'_, AppState>, id: String, name: String, enabled: bool) -> Result<(), String> {
+    instance::load(&st.data, &id).map_err(es)?;
+    content::set_mod_enabled(&instance::game_dir(&st.data, &id), &name, enabled).map_err(es)
+}
+
+#[tauri::command]
+async fn delete_content(st: State<'_, AppState>, id: String, kind: String, name: String) -> Result<(), String> {
+    instance::load(&st.data, &id).map_err(es)?;
+    content::delete(&instance::game_dir(&st.data, &id), content_kind(&kind)?, &name).map_err(es)
+}
+
+#[tauri::command]
+async fn open_content_folder(st: State<'_, AppState>, id: String, kind: String) -> Result<(), String> {
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    let game = instance::game_dir(&st.data, &id);
+    content::ensure_dirs(&game, inst.loader).map_err(es)?;
+    open_path(&content::dir(&game, content_kind(&kind)?))
+}
+
+#[tauri::command]
+async fn get_client_profile(st: State<'_, AppState>, id: String) -> Result<Profile, String> {
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    ensure_profile(&st, &inst)
+}
+
+#[tauri::command]
+async fn save_client_profile(st: State<'_, AppState>, id: String, profile: Profile) -> Result<Profile, String> {
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    let current = ensure_profile(&st, &inst)?;
+    // لا نسمح للواجهة بكتابة profile آخر: المعرّف يُفرَض من الـ instance
+    let mut p = profile;
+    p.id = current.id;
+    profile::save(&st.data, &p).map_err(es)
+}
+
 fn main() {
     let client = reqwest::Client::builder()
         .user_agent(concat!("HorizonRustClean/", env!("CARGO_PKG_VERSION")))
@@ -371,6 +456,12 @@ fn main() {
             get_settings,
             save_settings,
             java_info,
+            list_content,
+            toggle_mod,
+            delete_content,
+            open_content_folder,
+            get_client_profile,
+            save_client_profile,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Horizon Rust Clean");
