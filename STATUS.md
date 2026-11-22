@@ -1,4 +1,4 @@
-# Horizon Rust Clean — STATUS (v0.3.1)
+# Horizon Rust Clean — STATUS (v0.4.0)
 
 > Rule of this file: nothing is marked as working unless a test actually ran it. "Verified" means a CI job did it on the stated platform; everything else is listed under "Not verified".
 
@@ -14,7 +14,15 @@
 | **Windows installer (x64)** | Silent install; `horizon-rust-clean.exe`, `hrc-cli.exe`, `horizon-client.jar` present; `hrc-cli.exe` ran on Windows (netcheck reached Mojang, Fabric, Quilt, Forge, NeoForge; Fabric 1.20.1 install completed); the GUI stayed alive 20 s with window title "Horizon Rust Clean". |
 | Install-only matrix | Fabric 1.16.5/1.18/1.20.1/1.21.1/26.3 · Quilt 1.18.2/1.20.1/1.21.1 · Forge 1.12.2/1.16.5/1.18.2/1.20.1/1.21.1/26.3 · NeoForge 1.20.4/1.21.1/26.3 |
 
-## Horizon Rust (experimental) — native Rust game (added after v0.3.1, not released yet)
+## Horizon (Rust tools) — plain Minecraft + launcher-side Rust tools (new in 0.4.0)
+
+Environment id `rusttools`: runs original Minecraft (Java) with no mods and no agent. In the GUI Play path the launcher applies the chosen performance preset and the enabled Rust tools (log cleaner, crash cleaner, screenshot sorter) before launching.
+**Verified by CI:** install for 1.20.1 and 26.3; real launch of 1.20.1 (window, alive after load, screenshot, no crash) — note the CLI launch path used by CI is plain vanilla; the Tauri path that adds the preset/tools was not launched by CI (preset flags were accepted by the JVM in an earlier test, and the Rust tools are unit-tested).
+**Not verified:** FPS effect of the preset; the GUI flow.
+
+**Minecraft 26.3 launch:** the CI run downloaded the right Java runtime (java-runtime-epsilon) and started the game, but the game could not create a renderer under the CI virtual display ("Couldn't find matching GLX visual", Vulkan unsupported). So 26.x launching is **not verified**; install is.
+
+## Horizon Rust (experimental) — native Rust game (new in 0.4.0)
 
 **What it is:** a small voxel game prototype written from scratch in Rust (`crates/hrc-rustgame`: wgpu + winit, no Mojang code or assets). Generated terrain, face-culled chunk meshes, fly camera (WASD / Space / Shift / Ctrl, mouse look), bitmap-font HUD (FPS, position, chunks, faces), position saved in the instance folder, `horizon-rust.properties` for seed/radius/vsync. In the launcher it is the environment "Horizon Rust (experimental)": no install download, no Java.
 

@@ -1,13 +1,12 @@
-Horizon Rust Clean v0.3.1 (test build / نسخة تجريبية)
+Horizon Rust Clean v0.4.0 (test build / نسخة تجريبية)
 
 Install: download **HorizonRustClean-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn.
 
-What was really tested in CI (details in STATUS.md):
-- Actual game launch (window + still running + screenshot): Vanilla 1.8.9 / 1.12.2 / 1.16.5 / 1.20.1 / 1.21.1; Fabric 1.20.1 / 1.21.1; Quilt 1.20.1; Forge 1.12.2 / 1.16.5 / 1.20.1; NeoForge 1.21.1 — on Linux with software rendering.
-- Java Runtime downloaded automatically from Mojang in every launch.
-- Sodium / Lithium from Modrinth loaded in Fabric 1.20.1.
-- Instances are isolated (Vanilla, Fabric, Quilt on the same version side by side).
-- Windows: silent install, files present, CLI works, GUI starts.
+New in this build — two Rust-flavoured environments in "New instance":
+- **Horizon Rust (experimental)**: a tiny native voxel game written in Rust. NOT Minecraft: no Java, no Minecraft worlds/servers/mods. Prototype (fly around generated terrain with an FPS HUD).
+- **Horizon (Rust tools)**: normal Minecraft (Java), any version, nothing injected; launcher-side performance preset + log/crash cleaners + screenshot sorter, all optional.
 
-NOT tested: launching on Windows, FPS gains, clicking through the GUI, the meta.fabricmc.net error on one user's PC (Settings -> Network check helps diagnose it), HUD on 1.13+.
+Tested in CI (details in STATUS.md): everything from v0.3.1 (real launches of Vanilla/Fabric/Quilt/Forge/NeoForge on 1.8.9-1.21.1 on Linux, isolation, Windows installer + GUI start), plus the Rust game rendering a frame on Linux and Windows (software GPU) and Horizon (Rust tools) 1.20.1 launching.
+
+NOT tested: launching Minecraft on Windows, real-GPU performance and FPS gains, clicking through the GUI, Minecraft 26.x launch (the game started but could not create a renderer under the CI virtual display), HUD on 1.13+.
 Accounts: offline only.

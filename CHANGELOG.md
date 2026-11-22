@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-11-22
+
+### Added
+- **Horizon Rust (experimental)**: a small native voxel game written from scratch in Rust (wgpu + winit). It is NOT Minecraft (no Mojang code, worlds, servers, mods or Java). Early prototype: generated terrain, fly camera, FPS/position HUD.
+- **Horizon (Rust tools)** environment: original Minecraft (Java), any version, with nothing injected into the game; the launcher adds the optional performance preset and the Rust tools (log cleaner, crash cleaner, screenshot sorter).
+- CI: launch tests for Horizon (Rust tools) 1.20.1, install tests for Rust tools 1.20.1 / 26.3, informational launch test for vanilla 26.3.
+
 ## Unreleased
 ### Added
 - **Horizon Rust (experimental)**: a new environment type that is a native game written in Rust (wgpu + winit), NOT Minecraft. Generated block world, fly camera, FPS/position HUD, position saved per instance. No Java, no Minecraft versions, no mods.
