@@ -19,6 +19,8 @@ pub enum Loader {
     Neoforge,
     /// Minecraft الأصلية + عميل Horizon (HUD عبر Java agent، تجريبي).
     Horizon,
+    /// Minecraft الأصلية (Java) بلا أي مود أو حقن كود، مع أدوات Rust في اللانشر (preset الأداء + Rust mods).
+    RustTools,
     /// لعبة Rust أصلية تجريبية (ليست Minecraft): بلا Java ولا إصدارات Minecraft ولا مودات.
     Rust,
 }
@@ -32,6 +34,7 @@ impl Loader {
             "forge" => Some(Self::Forge),
             "neoforge" => Some(Self::Neoforge),
             "horizon" => Some(Self::Horizon),
+            "rusttools" => Some(Self::RustTools),
             "rust" => Some(Self::Rust),
             _ => None,
         }
@@ -45,6 +48,7 @@ impl Loader {
             Self::Forge => "Forge",
             Self::Neoforge => "NeoForge",
             Self::Horizon => "Horizon Client (beta)",
+            Self::RustTools => "Horizon (Rust tools)",
             Self::Rust => "Horizon Rust (experimental)",
         }
     }
@@ -346,7 +350,7 @@ pub async fn install(client: &reqwest::Client, shared: &Path, l: Loader, mc: &st
     let vanilla = || Installed { loader_version: None, launch_id: mc.to_string() };
     match l {
         Loader::Rust => err("Horizon Rust is a native game: nothing to install from Mojang"),
-        Loader::Vanilla => Ok(vanilla()),
+        Loader::Vanilla | Loader::RustTools => Ok(vanilla()),
         Loader::Horizon if crate::perf::legacy_hud_supported(mc) => Ok(vanilla()),
         Loader::Fabric | Loader::Quilt | Loader::Horizon => {
             let base = if l == Loader::Quilt { Loader::Quilt } else { Loader::Fabric };
@@ -386,6 +390,9 @@ mod tests {
         assert_eq!(Loader::Horizon.mods_loader("1.8.9"), None);
         assert_eq!(Loader::Vanilla.mods_loader("1.20.1"), None);
         assert_eq!(Loader::parse("rust"), Some(Loader::Rust));
+        assert_eq!(Loader::parse("rusttools"), Some(Loader::RustTools));
+        assert_eq!(Loader::RustTools.mods_loader("1.20.1"), None);
+        assert!(!Loader::RustTools.supports_mods());
         assert_eq!(Loader::Rust.mods_loader("1.20.1"), None);
         assert!(!Loader::Rust.supports_mods() && Loader::Rust.modrinth_loader().is_none());
         assert!(Loader::Fabric.supports_mods() && !Loader::Vanilla.supports_mods() && !Loader::Horizon.supports_mods());

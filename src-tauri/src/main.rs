@@ -248,16 +248,16 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
         let _ = app.emit("console", ConsoleLine { id: id.to_string(), err: false, line });
     };
 
-    // Vanilla/Fabric/Quilt/Forge/NeoForge: بلا أي إضافات. Horizon Client فقط: preset الأداء + agent الـ HUD.
+    // Vanilla/Fabric/Quilt/Forge/NeoForge: بلا أي إضافات. RustTools: preset الأداء + Rust mods فقط (بلا agent). Horizon Client: preset الأداء + agent الـ HUD.
     let game_dir = instance::game_dir(&st.data, id);
     let mut extra: Vec<String> = Vec::new();
-    if inst.loader == Loader::Horizon {
+    if matches!(inst.loader, Loader::Horizon | Loader::RustTools) {
         let prof = ensure_profile(st, &inst)?;
         extra.extend(perf::jvm_flags(prof.perf));
         for line in hrc_core::rustmods::run_prelaunch(&game_dir, &prof.rust_mods, std::time::SystemTime::now()) {
             sys(line);
         }
-        if perf::legacy_hud_supported(&inst.version_id) {
+        if inst.loader == Loader::Horizon && perf::legacy_hud_supported(&inst.version_id) {
             match agent_jar().and_then(|j| profile::agent_arg(&j, &game_dir, &inst.version_id)) {
                 Some(arg) => {
                     profile::write_client_config(&game_dir, &prof).map_err(es)?;

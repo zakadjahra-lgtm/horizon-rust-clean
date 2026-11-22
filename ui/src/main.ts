@@ -33,6 +33,7 @@ const LOADERS = [
   { id: 'quilt', label: 'Quilt', hint: 'Fabric-compatible mod loader (Minecraft 1.14 and newer).' },
   { id: 'forge', label: 'Forge', hint: 'Installed with Forge\'s official installer; the first install can take a few minutes.' },
   { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
+  { id: 'rusttools', label: 'Horizon (Rust tools)', hint: 'Original Minecraft (Java), any version. No mods and nothing injected into the game. The launcher (Rust) adds an optional performance preset and tools: log cleaner, crash cleaner, screenshot sorter.' },
   { id: 'rust', label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
   { id: 'horizon', label: 'Horizon Client (beta)', hint: 'Our clean client (beta). HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
@@ -306,7 +307,7 @@ function renderContent(): HTMLElement {
       h('button', { class: 'btn', onclick: () => { void invoke('open_instance_folder', { id: inst.id }).catch((e) => toast(errMsg(e), true)); } }, 'Open folder')));
     return wrap;
   }
-  if (inst.loader === 'horizon') wrap.append(clientPanel(inst));
+  if (inst.loader === 'horizon' || inst.loader === 'rusttools') wrap.append(clientPanel(inst));
   if (supportsMods(inst)) {
     wrap.append(modBrowser(inst));
     wrap.append(contentSection(inst, 'mods', 'Mods', 'The checkbox turns a mod on or off without deleting it. Changes apply the next time you launch.'));
@@ -390,7 +391,9 @@ function modBrowser(inst: Instance): HTMLElement {
 }
 
 function clientPanel(inst: Instance): HTMLElement {
-  const box = h('div', { class: 'card' }, h('h2', {}, 'Horizon Client (beta)'), h('span', { class: 'muted' }, 'Loading…'));
+  const title = inst.loader === 'rusttools' ? 'Horizon (Rust tools)' : 'Horizon Client (beta)';
+  const hud = inst.loader === 'horizon';
+  const box = h('div', { class: 'card' }, h('h2', {}, title), h('span', { class: 'muted' }, 'Loading…'));
   const legacy = isLegacyMc(inst.version_id);
   void invoke('get_client_profile', { id: inst.id }).then((p: ClientProfile) => {
     const rustLabels: Record<string, string> = {
@@ -405,11 +408,11 @@ function clientPanel(inst: Instance): HTMLElement {
     const perf = h('select', { class: 'input', onchange: (e: Event) => { p.perf = (e.target as HTMLSelectElement).value; } },
       ...['vanilla', 'balanced', 'performance'].map((v) => h('option', { value: v, selected: p.perf === v }, v)));
     box.replaceChildren(
-      h('h2', {}, 'Horizon Client (beta)'),
-      h('p', { class: 'muted' }, legacy
+      h('h2', {}, title),
+      h('p', { class: 'muted' }, !hud ? 'Plain Minecraft with launcher-side tools only. Nothing is injected into the game; changes apply on the next launch.' : legacy
         ? 'These HUD modules run inside Minecraft 1.8–1.12.2. All are off by default; changes apply on the next launch.'
         : 'HUD modules are available for Minecraft 1.8–1.12.2 only for now. This version runs on a Fabric base; the performance preset still applies.'),
-      ...rows,
+      ...(hud ? rows : []),
       h('h3', { style: 'margin:14px 0 4px' }, 'Rust mods (beta)'),
       h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Small tools that run in the launcher before the game starts. All off by default.'),
       ...Object.keys(rustLabels).map((k) => h('label', { class: 'chk', style: 'display:flex;margin:6px 0' },
@@ -423,7 +426,7 @@ function clientPanel(inst: Instance): HTMLElement {
           catch (e) { toast(errMsg(e), true); }
         },
       }, 'Save')));
-  }).catch((e) => box.replaceChildren(h('h2', {}, 'Horizon Client (beta)'), h('p', { class: 'muted' }, errMsg(e))));
+  }).catch((e) => box.replaceChildren(h('h2', {}, title), h('p', { class: 'muted' }, errMsg(e))));
   return box;
 }
 
