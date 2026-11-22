@@ -27,6 +27,9 @@ pub struct Profile {
     pub hud_scale: u32,
     #[serde(default)]
     pub perf: PerfPreset,
+    /// Rust mods (beta) تعمل داخل اللانشر قبل التشغيل؛ مطفأة افتراضياً.
+    #[serde(default)]
+    pub rust_mods: BTreeMap<String, bool>,
     pub mods: BTreeMap<String, HudMod>,
 }
 
@@ -48,7 +51,7 @@ impl Profile {
                 (m.to_string(), HudMod { enabled: false, x, y })
             })
             .collect();
-        Profile { id, name, hud_scale: 0, perf: PerfPreset::Vanilla, mods }
+        Profile { id, name, hud_scale: 0, perf: PerfPreset::Vanilla, rust_mods: BTreeMap::new(), mods }
     }
 }
 
@@ -76,6 +79,12 @@ fn normalize(mut p: Profile) -> Result<Profile> {
     p.name = clean_name(&p.name)?;
     if let Some(bad) = p.mods.keys().find(|k| !MOD_IDS.contains(&k.as_str())) {
         return err(format!("مود غير معروف: {bad}"));
+    }
+    if let Some(bad) = p.rust_mods.keys().find(|k| !crate::rustmods::IDS.contains(&k.as_str())) {
+        return err(format!("Rust mod غير معروف: {bad}"));
+    }
+    for id in crate::rustmods::IDS {
+        p.rust_mods.entry(id.to_string()).or_insert(false);
     }
     p.hud_scale = p.hud_scale.min(8);
     for m in MOD_IDS {

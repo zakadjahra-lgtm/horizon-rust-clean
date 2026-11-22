@@ -8,7 +8,7 @@ interface Instance {
 }
 interface ContentItem { name: string; enabled: boolean; size: number; is_dir: boolean }
 interface ClientProfile {
-  id: string; name: string; hud_scale: number; perf: string;
+  id: string; name: string; hud_scale: number; perf: string; rust_mods: Record<string, boolean>;
   mods: Record<string, { enabled: boolean; x: number; y: number }>;
 }
 interface VersionInfo { id: string; kind: string }
@@ -36,7 +36,10 @@ const LOADERS = [
   { id: 'horizon', label: 'Horizon Client (beta)', hint: 'Our clean client (beta). HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
 const loaderLabel = (id: string): string => LOADERS.find((l) => l.id === id)?.label ?? id;
-const supportsMods = (id: string): boolean => ['fabric', 'quilt', 'forge', 'neoforge'].includes(id);
+const isLegacyMc = (v: string): boolean => /^1\.(8|9|10|11|12)(\.|$)/.test(v);
+// Horizon على 1.13+ يعمل فوق Fabric فيقبل مودات Fabric؛ على 1.8–1.12.2 لا مودات خارجية.
+const supportsMods = (i: Instance): boolean =>
+  ['fabric', 'quilt', 'forge', 'neoforge'].includes(i.loader) || (i.loader === 'horizon' && !isLegacyMc(i.version_id));
 
 let page = 'home';
 let filterLoader = 'all';
@@ -291,7 +294,8 @@ function renderContent(): HTMLElement {
   wrap.append(h('h1', { style: 'margin-top:14px' }, inst.name),
     h('p', { class: 'muted' }, `${loaderLabel(inst.loader)} · Minecraft ${inst.version_id} — files here belong to this instance only.`));
   if (inst.loader === 'horizon') wrap.append(clientPanel(inst));
-  if (supportsMods(inst.loader)) {
+  if (supportsMods(inst)) {
+    wrap.append(modBrowser(inst));
     wrap.append(contentSection(inst, 'mods', 'Mods', 'The checkbox turns a mod on or off without deleting it. Changes apply the next time you launch.'));
   }
   wrap.append(contentSection(inst, 'resourcepacks', 'Resource packs', 'Enable them in game: Options → Resource Packs.'));
@@ -335,10 +339,51 @@ function contentSection(inst: Instance, kind: string, title: string, note: strin
     h('p', { class: 'muted' }, note), list);
 }
 
+function modBrowser(inst: Instance): HTMLElement {
+  const out = h('div', {}, h('span', { class: 'muted' }, 'Search Modrinth, or load the suggested light mods. Offline? Use "Open folder" and drop .jar files in.'));
+  const q = h('input', { class: 'input', placeholder: 'Search mods…', style: 'width:240px' }) as HTMLInputElement;
+  const addBtn = (slug: string): HTMLElement => h('button', {
+    class: 'btn',
+    onclick: async (e: Event) => {
+      const b = e.target as HTMLButtonElement; b.disabled = true; b.textContent = 'Installing…';
+      try {
+        const got: string[] = await invoke('install_mod', { id: inst.id, project: slug });
+        toast(got.length ? `Installed ${got.join(', ')}` : 'Already installed');
+        b.textContent = 'Installed';
+        render();
+      } catch (err) { toast(errMsg(err), true); b.disabled = false; b.textContent = 'Install'; }
+    },
+  }, 'Install');
+  const line = (slug: string, title: string, note: string): HTMLElement =>
+    h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line)' },
+      h('div', { class: 'grow' }, h('strong', {}, title), h('div', { class: 'muted' }, note)), addBtn(slug));
+  const doSearch = async (): Promise<void> => {
+    out.replaceChildren(h('span', { class: 'muted' }, 'Searching…'));
+    try {
+      const hits: { slug: string; title: string; description: string }[] = await invoke('search_mods', { id: inst.id, query: q.value });
+      out.replaceChildren(...(hits.length ? hits.map((x) => line(x.slug, x.title, x.description)) : [h('span', { class: 'muted' }, 'No results for this Minecraft version.')]));
+    } catch (e) { out.replaceChildren(h('span', { class: 'muted' }, 'Could not reach Modrinth (' + errMsg(e) + '). You can still add .jar files by hand.')); }
+  };
+  const showSuggested = async (): Promise<void> => {
+    const list: { slug: string; note: string }[] = await invoke('curated_mods');
+    out.replaceChildren(...list.map((x) => line(x.slug, x.slug, x.note)));
+  };
+  return h('div', { class: 'card' }, h('h2', {}, 'Get mods'),
+    h('div', { class: 'row' }, q,
+      h('button', { class: 'btn primary', onclick: () => { void doSearch(); } }, 'Search'),
+      h('button', { class: 'btn', onclick: () => { void showSuggested(); } }, 'Suggested light mods')),
+    out);
+}
+
 function clientPanel(inst: Instance): HTMLElement {
   const box = h('div', { class: 'card' }, h('h2', {}, 'Horizon Client (beta)'), h('span', { class: 'muted' }, 'Loading…'));
-  const legacy = /^1\.(8|9|10|11|12)(\.|$)/.test(inst.version_id);
+  const legacy = isLegacyMc(inst.version_id);
   void invoke('get_client_profile', { id: inst.id }).then((p: ClientProfile) => {
+    const rustLabels: Record<string, string> = {
+      log_cleaner: 'Log cleaner — delete compressed logs older than 14 days',
+      crash_cleaner: 'Crash cleaner — delete crash reports older than 30 days',
+      screenshot_sorter: 'Screenshot sorter — group screenshots into dated folders',
+    };
     const labels: Record<string, string> = { fps: 'FPS counter', cps: 'CPS counter', keystrokes: 'Keystrokes' };
     const rows = Object.keys(labels).map((k) => h('label', { class: 'chk', style: 'display:flex;margin:6px 0' },
       h('input', { type: 'checkbox', checked: p.mods[k]?.enabled, disabled: !legacy, onchange: (e: Event) => { p.mods[k].enabled = (e.target as HTMLInputElement).checked; } }),
@@ -351,6 +396,11 @@ function clientPanel(inst: Instance): HTMLElement {
         ? 'These HUD modules run inside Minecraft 1.8–1.12.2. All are off by default; changes apply on the next launch.'
         : 'HUD modules are available for Minecraft 1.8–1.12.2 only for now. This version runs on a Fabric base; the performance preset still applies.'),
       ...rows,
+      h('h3', { style: 'margin:14px 0 4px' }, 'Rust mods (beta)'),
+      h('p', { class: 'muted', style: 'margin:0 0 4px' }, 'Small tools that run in the launcher before the game starts. All off by default.'),
+      ...Object.keys(rustLabels).map((k) => h('label', { class: 'chk', style: 'display:flex;margin:6px 0' },
+        h('input', { type: 'checkbox', checked: !!p.rust_mods?.[k], onchange: (e: Event) => { p.rust_mods = p.rust_mods ?? {}; p.rust_mods[k] = (e.target as HTMLInputElement).checked; } }),
+        rustLabels[k])),
       h('div', { class: 'row', style: 'margin-top:8px' }, h('span', { class: 'muted' }, 'Performance preset (JVM flags, not benchmarked):'), perf),
       h('div', { class: 'row end' }, h('button', {
         class: 'btn primary',

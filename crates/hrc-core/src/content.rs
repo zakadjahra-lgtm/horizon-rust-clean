@@ -47,7 +47,7 @@ pub fn dir(game_dir: &Path, kind: Kind) -> PathBuf {
 pub fn ensure_dirs(game_dir: &Path, loader: Loader) -> Result<()> {
     std::fs::create_dir_all(dir(game_dir, Kind::ResourcePacks))?;
     std::fs::create_dir_all(dir(game_dir, Kind::ShaderPacks))?;
-    if loader.supports_mods() {
+    if loader.supports_mods() || loader == Loader::Horizon {
         std::fs::create_dir_all(dir(game_dir, Kind::Mods))?;
     }
     Ok(())

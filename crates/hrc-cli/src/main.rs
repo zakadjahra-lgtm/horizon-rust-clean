@@ -29,8 +29,23 @@ async fn main() -> hrc_core::Result<()> {
         println!("{}", hrc_core::perf::jvm_flags(preset).join(" "));
         return Ok(());
     }
-    let client = reqwest::Client::builder().user_agent("HorizonRustClean/0.1").build()?;
+    let client = reqwest::Client::builder()
+        .user_agent("zakadjahra-lgtm/horizon-rust-clean/0.3 (Minecraft launcher CLI)")
+        .build()?;
     let data = data_dir();
+    if a.get(1).map(String::as_str) == Some("mod") {
+        // HRC_LOADER=fabric hrc-cli mod <mc-version> <modrinth-slug>  → ينزّل المود + تبعياته إلى mods/ للـ instance
+        let l = Loader::parse(&std::env::var("HRC_LOADER").unwrap_or_else(|_| "fabric".into()))
+            .ok_or_else(|| hrc_core::Error::Msg("unknown loader".into()))?;
+        let (mc, slug) = (a.get(2).expect("missing mc version"), a.get(3).expect("missing mod slug"));
+        let game = data.join("instances").join(format!("cli-{}-{mc}", l.label().split_whitespace().next().unwrap_or("x").to_lowercase()));
+        let got = hrc_core::modrinth::install_mod(&client, &game, slug, l, mc).await?;
+        println!("Installed mods: {}", got.join(", "));
+        for it in hrc_core::content::list(&game, hrc_core::content::Kind::Mods)? {
+            println!("  {} ({} bytes, enabled={})", it.name, it.size, it.enabled);
+        }
+        return Ok(());
+    }
     let shared = data.join("shared");
     let manifest = Manifest::fetch(&client).await?;
 

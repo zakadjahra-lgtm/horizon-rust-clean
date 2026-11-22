@@ -228,6 +228,9 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
     if inst.loader == Loader::Horizon {
         let prof = ensure_profile(st, &inst)?;
         extra.extend(perf::jvm_flags(prof.perf));
+        for line in hrc_core::rustmods::run_prelaunch(&game_dir, &prof.rust_mods, std::time::SystemTime::now()) {
+            sys(line);
+        }
         if perf::legacy_hud_supported(&inst.version_id) {
             match agent_jar().and_then(|j| profile::agent_arg(&j, &game_dir, &inst.version_id)) {
                 Some(arg) => {
@@ -427,9 +430,31 @@ async fn save_client_profile(st: State<'_, AppState>, id: String, profile: Profi
     profile::save(&st.data, &p).map_err(es)
 }
 
+#[derive(serde::Serialize)]
+struct Curated { slug: String, note: String }
+
+#[tauri::command]
+async fn curated_mods() -> Vec<Curated> {
+    hrc_core::modrinth::CURATED_FABRIC.iter().map(|(s, n)| Curated { slug: s.to_string(), note: n.to_string() }).collect()
+}
+
+#[tauri::command]
+async fn search_mods(st: State<'_, AppState>, id: String, query: String) -> Result<Vec<hrc_core::modrinth::Hit>, String> {
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    hrc_core::modrinth::search(&st.client, &query, inst.loader, &inst.version_id).await.map_err(es)
+}
+
+#[tauri::command]
+async fn install_mod(st: State<'_, AppState>, id: String, project: String) -> Result<Vec<String>, String> {
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    hrc_core::modrinth::install_mod(&st.client, &instance::game_dir(&st.data, &id), &project, inst.loader, &inst.version_id)
+        .await
+        .map_err(es)
+}
+
 fn main() {
     let client = reqwest::Client::builder()
-        .user_agent(concat!("HorizonRustClean/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("zakadjahra-lgtm/horizon-rust-clean/", env!("CARGO_PKG_VERSION"), " (Minecraft launcher)"))
         .build()
         .expect("http client");
     let state = AppState {
@@ -443,6 +468,9 @@ fn main() {
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             list_versions,
+            curated_mods,
+            search_mods,
+            install_mod,
             list_instances,
             create_instance,
             delete_instance,

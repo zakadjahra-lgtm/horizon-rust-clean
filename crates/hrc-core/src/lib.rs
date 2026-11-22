@@ -9,10 +9,12 @@ pub mod java;
 pub mod launch;
 pub mod loader;
 pub mod manifest;
+pub mod modrinth;
 pub mod perf;
 pub mod platform;
 pub mod profile;
 pub mod rules;
+pub mod rustmods;
 pub mod settings;
 pub mod version;
 

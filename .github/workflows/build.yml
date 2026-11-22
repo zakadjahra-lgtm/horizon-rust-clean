@@ -177,3 +177,28 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo run --release -p hrc-cli -- install ${{ matrix.version }}
+
+  # مدير المودات الحقيقي: تنزيل من Modrinth مع SHA1 والتبعيات، لبيئات مختلفة
+  mods-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { loader: fabric, mc: "1.20.1", mod: sodium }
+          - { loader: fabric, mc: "1.20.1", mod: lithium }
+          - { loader: quilt, mc: "1.20.1", mod: lithium }
+          - { loader: horizon, mc: "1.20.1", mod: ferrite-core }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p hrc-cli
+      - name: Install ${{ matrix.mod }} for ${{ matrix.loader }} ${{ matrix.mc }}
+        env:
+          HRC_LOADER: ${{ matrix.loader }}
+        run: |
+          out=$(target/release/hrc-cli mod ${{ matrix.mc }} ${{ matrix.mod }})
+          echo "$out"
+          echo "$out" | grep -q "\.jar" || { echo "no jar installed"; exit 1; }

@@ -51,6 +51,15 @@ impl Loader {
     }
 
     /// اسم الـ loader في Modrinth.
+    /// الـ loader الفعلي الذي تُحمَّل له المودات: Horizon على 1.13+ يعمل فوق Fabric، وعلى 1.8–1.12.2 بلا مودات خارجية.
+    pub fn mods_loader(self, mc: &str) -> Option<Loader> {
+        match self {
+            Self::Fabric | Self::Quilt | Self::Forge | Self::Neoforge => Some(self),
+            Self::Horizon if !crate::perf::legacy_hud_supported(mc) => Some(Self::Fabric),
+            _ => None,
+        }
+    }
+
     pub fn modrinth_loader(self) -> Option<&'static str> {
         match self {
             Self::Fabric => Some("fabric"),
@@ -345,6 +354,9 @@ mod tests {
     fn parse_and_capabilities() {
         assert_eq!(Loader::parse(" NeoForge "), Some(Loader::Neoforge));
         assert_eq!(Loader::parse("liteloader"), None);
+        assert_eq!(Loader::Horizon.mods_loader("1.20.1"), Some(Loader::Fabric));
+        assert_eq!(Loader::Horizon.mods_loader("1.8.9"), None);
+        assert_eq!(Loader::Vanilla.mods_loader("1.20.1"), None);
         assert!(Loader::Fabric.supports_mods() && !Loader::Vanilla.supports_mods() && !Loader::Horizon.supports_mods());
         assert_eq!(Loader::Quilt.modrinth_loader(), Some("quilt"));
         assert_eq!(Loader::Vanilla.modrinth_loader(), None);
