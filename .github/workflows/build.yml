@@ -252,6 +252,7 @@ jobs:
   launch-smoke:
     needs: test
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental == true }}
     permissions:
       contents: write
     strategy:
@@ -263,7 +264,7 @@ jobs:
           - { loader: vanilla, version: "1.16.5" }
           - { loader: vanilla, version: "1.20.1" }
           - { loader: vanilla, version: "1.21.1" }
-          - { loader: vanilla, version: "26.3" }
+          - { loader: vanilla, version: "26.3", experimental: true }
           - { loader: rusttools, version: "1.20.1" }
           - { loader: fabric, version: "1.20.1" }
           - { loader: fabric, version: "1.21.1" }

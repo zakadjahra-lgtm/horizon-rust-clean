@@ -15,6 +15,7 @@ export LIBGL_ALWAYS_SOFTWARE=1 DISPLAY=:99 MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLS
 start_server() {
   case "$1" in
     xvfb) Xvfb :99 -screen 0 1280x720x24 +extension GLX +extension RANDR +render -noreset >"$OUT/xserver-$1.log" 2>&1 & ;;
+    xvfb32) Xvfb :99 -screen 0 1280x720x24+32 +extension GLX +extension RANDR +render -noreset >"$OUT/xserver-$1.log" 2>&1 & ;;
     xorg) sudo Xorg :99 -config "$ROOT/ci/xorg-dummy.conf" -noreset -ac -nolisten tcp -novtswitch -sharevts -logfile "$OUT/xorg.log" >"$OUT/xserver-$1.log" 2>&1 & ;;
   esac
   SRV=$!
@@ -29,7 +30,7 @@ if [ -n "${SMOKE_MOD:-}" ]; then
   "$ROOT/target/release/hrc-cli" mod "$VER" "$SMOKE_MOD" | tee "$OUT/$LOADER-$VER-mod.log"
 fi
 window_found=0
-for server in xvfb xorg; do
+for server in xvfb xvfb32 xorg; do
   command -v "$(case $server in xorg) echo Xorg;; *) echo Xvfb;; esac)" >/dev/null || continue
   echo "=== attempt with $server ==="
   start_server "$server" || { echo "$server did not start"; kill $SRV 2>/dev/null; continue; }
