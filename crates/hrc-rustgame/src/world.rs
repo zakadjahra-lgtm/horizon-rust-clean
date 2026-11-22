@@ -209,7 +209,9 @@ impl World {
                             continue;
                         }
                         let col = b.color();
-                        let color = [col[0] * shade, col[1] * shade, col[2] * shade];
+                        // الألوان أعلاه بمجال sRGB؛ الـ shader والهدف sRGB يعملان خطياً، فنحوّلها إلى خطي هنا
+                        let lin = |c: f32| (c * shade).powf(2.2);
+                        let color = [lin(col[0]), lin(col[1]), lin(col[2])];
                         let base = m.vertices.len() as u32;
                         for c in corners {
                             m.vertices.push(Vertex { pos: [wx as f32 + c[0], y as f32 + c[1], wz as f32 + c[2]], color });

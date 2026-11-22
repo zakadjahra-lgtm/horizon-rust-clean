@@ -10,6 +10,9 @@
 #ifndef AgentJar
   #define AgentJar "..\target\release\horizon-client.jar"
 #endif
+#ifndef RustGame
+  #define RustGame "..\target\release\horizon-rust-game.exe"
+#endif
 #ifndef CliExe
   #define CliExe "..\target\release\hrc-cli.exe"
 #endif
@@ -42,6 +45,7 @@ Name: "addtopath"; Description: "Add hrc-cli to PATH (use it from any terminal)"
 Source: "{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#CliExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#AgentJar}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#RustGame}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\STATUS.md"; DestDir: "{app}"; Flags: ignoreversion

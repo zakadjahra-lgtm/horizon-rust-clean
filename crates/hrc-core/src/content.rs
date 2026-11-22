@@ -47,6 +47,9 @@ pub fn dir(game_dir: &Path, kind: Kind) -> PathBuf {
 
 /// ينشئ مجلدات المحتوى المناسبة لنوع الـ instance (المودات فقط لمن يدعمها).
 pub fn ensure_dirs(game_dir: &Path, loader: Loader) -> Result<()> {
+    if loader == Loader::Rust {
+        return Ok(()); // لعبة أصلية: لا حزم موارد ولا shaders ولا مودات Minecraft
+    }
     std::fs::create_dir_all(dir(game_dir, Kind::ResourcePacks))?;
     std::fs::create_dir_all(dir(game_dir, Kind::ShaderPacks))?;
     if loader.supports_mods() || loader == Loader::Horizon {
@@ -165,6 +168,8 @@ mod tests {
         let d = tmp("a");
         ensure_dirs(&d.join("v"), Loader::Vanilla).unwrap();
         ensure_dirs(&d.join("f"), Loader::Fabric).unwrap();
+        ensure_dirs(&d.join("r"), Loader::Rust).unwrap();
+        assert!(!d.join("r").exists(), "Rust instances get no Minecraft content folders");
         assert!(d.join("v/resourcepacks").is_dir() && d.join("v/shaderpacks").is_dir());
         assert!(!d.join("v/mods").exists());
         assert!(d.join("f/mods").is_dir());

@@ -4,6 +4,7 @@ use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+/// سماء بمجال خطي (= sRGB 0.70, 0.84, 0.96 تقريباً)
 pub const SKY: wgpu::Color = wgpu::Color { r: 0.45, g: 0.68, b: 0.92, a: 1.0 };
 const HUD_CAPACITY: usize = 60_000; // رؤوس
 

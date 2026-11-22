@@ -33,8 +33,11 @@ const LOADERS = [
   { id: 'quilt', label: 'Quilt', hint: 'Fabric-compatible mod loader (Minecraft 1.14 and newer).' },
   { id: 'forge', label: 'Forge', hint: 'Installed with Forge\'s official installer; the first install can take a few minutes.' },
   { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
+  { id: 'rust', label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
   { id: 'horizon', label: 'Horizon Client (beta)', hint: 'Our clean client (beta). HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
+const RUST_VERSION = 'horizon-rust-0.1';
+const isRust = (i: Instance): boolean => i.loader === 'rust';
 const loaderLabel = (id: string): string => LOADERS.find((l) => l.id === id)?.label ?? id;
 const isLegacyMc = (v: string): boolean => /^1\.(8|9|10|11|12)(\.|$)/.test(v);
 // Horizon على 1.13+ يعمل فوق Fabric فيقبل مودات Fabric؛ على 1.8–1.12.2 لا مودات خارجية.
@@ -185,7 +188,7 @@ function renderHome(): HTMLElement {
   wrap.append(h('div', { class: 'card' },
     h('div', { class: 'row' }, sel,
       h('span', { class: 'badge ' + (inst.installed ? 'ok' : '') }, inst.installed ? 'installed' : 'not installed')),
-    h('p', { class: 'muted' }, `Minecraft ${inst.version_id} · ${inst.max_memory_mb} MB RAM · ${settings.username} (offline)`),
+    h('p', { class: 'muted' }, (isRust(inst) ? `Native Rust game (not Minecraft) · ${settings.username}` : `Minecraft ${inst.version_id} · ${inst.max_memory_mb} MB RAM · ${settings.username} (offline)`)),
     h('button', { class: 'play', disabled: isRun || isInst, onclick: () => { void startPlay(inst.id); } }, label),
     progressBlock()));
   return wrap;
@@ -206,7 +209,10 @@ function renderInstances(): HTMLElement {
     ...LOADERS.map((l) => h('option', { value: l.id }, l.label))) as HTMLSelectElement;
   if (filterLoader !== 'all') loaderSel.value = filterLoader;
   const hint = h('p', { class: 'muted', style: 'margin:8px 0 0' }, '');
-  const setHint = (): void => { hint.textContent = LOADERS.find((l) => l.id === loaderSel.value)?.hint ?? ''; };
+  const setHint = (): void => {
+    hint.textContent = LOADERS.find((l) => l.id === loaderSel.value)?.hint ?? '';
+    verSel.style.display = loaderSel.value === 'rust' ? 'none' : '';
+  };
   loaderSel.addEventListener('change', setHint);
   setHint();
   const kinds: Record<string, boolean> = { release: true, snapshot: false, old_beta: false, old_alpha: false };
@@ -225,7 +231,7 @@ function renderInstances(): HTMLElement {
         class: 'btn primary',
         onclick: async () => {
           try {
-            const created: Instance = await invoke('create_instance', { name: name.value, versionId: verSel.value, maxMemoryMb: Number(ram.value) || 2048, loader: loaderSel.value });
+            const created: Instance = await invoke('create_instance', { name: name.value, versionId: loaderSel.value === 'rust' ? RUST_VERSION : verSel.value, maxMemoryMb: Number(ram.value) || 2048, loader: loaderSel.value });
             await refreshInstances(); selected = created.id; saveSel(); toast('Instance created'); render();
           } catch (e) { toast(errMsg(e), true); }
         },
@@ -258,7 +264,7 @@ function instanceCard(i: Instance): HTMLElement {
     h('div', { class: 'list-item' },
       h('div', { class: 'grow' },
         h('h2', { style: 'margin:0' }, i.name),
-        h('div', { class: 'muted' }, `Minecraft ${i.version_id} · ${i.max_memory_mb} MB RAM `,
+        h('div', { class: 'muted' }, (isRust(i) ? 'Native Rust game (not Minecraft) ' : `Minecraft ${i.version_id} · ${i.max_memory_mb} MB RAM `),
           h('span', { class: 'badge' }, loaderLabel(i.loader)), ' ',
           h('span', { class: 'badge ' + (i.installed ? 'ok' : '') }, i.installed ? 'installed' : 'not installed'))),
       h('div', { class: 'row' },
@@ -292,7 +298,14 @@ function renderContent(): HTMLElement {
   const wrap = h('div', {}, h('button', { class: 'btn', onclick: () => go('instances') }, '← Instances'));
   if (!inst) { wrap.append(h('p', { class: 'muted' }, 'Instance not found.')); return wrap; }
   wrap.append(h('h1', { style: 'margin-top:14px' }, inst.name),
-    h('p', { class: 'muted' }, `${loaderLabel(inst.loader)} · Minecraft ${inst.version_id} — files here belong to this instance only.`));
+    h('p', { class: 'muted' }, `${loaderLabel(inst.loader)}${isRust(inst) ? '' : ' · Minecraft ' + inst.version_id} — files here belong to this instance only.`));
+  if (isRust(inst)) {
+    wrap.append(h('div', { class: 'card' }, h('h2', {}, 'Horizon Rust (experimental)'),
+      h('p', { class: 'muted' }, 'Controls: click the window to capture the mouse, W A S D to fly, Space / Left Shift up and down, Left Ctrl to sprint, Esc to release the mouse (Esc again to quit). Your position is saved in this instance\'s folder.'),
+      h('p', { class: 'muted' }, 'Optional file in the instance folder: horizon-rust.properties with seed=…, radius=1..16, vsync=true.'),
+      h('button', { class: 'btn', onclick: () => { void invoke('open_instance_folder', { id: inst.id }).catch((e) => toast(errMsg(e), true)); } }, 'Open folder')));
+    return wrap;
+  }
   if (inst.loader === 'horizon') wrap.append(clientPanel(inst));
   if (supportsMods(inst)) {
     wrap.append(modBrowser(inst));

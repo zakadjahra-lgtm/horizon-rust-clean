@@ -3,7 +3,7 @@
 
 use hrc_core::download::Progress;
 use hrc_core::instance::{self, Instance};
-use hrc_core::launch::{build_command, offline_uuid, spawn, AuthSession, LaunchContext};
+use hrc_core::launch::{build_command, offline_uuid, spawn, AuthSession, LaunchCommand, LaunchContext};
 use hrc_core::loader::{self, Loader};
 use hrc_core::manifest::Manifest;
 use hrc_core::platform::{data_dir, Os};
@@ -134,9 +134,23 @@ fn manual_java(inst: &Instance, st: &AppState) -> Option<String> {
         .or_else(|| s.java_path.filter(|p| !p.trim().is_empty()))
 }
 
+/// لعبة Rust الأصلية بجانب الـ EXE (يشحنها الـ Installer).
+fn rust_game_exe() -> Option<PathBuf> {
+    let name = if cfg!(windows) { "horizon-rust-game.exe" } else { "horizon-rust-game" };
+    let p = std::env::current_exe().ok()?.parent()?.join(name);
+    p.is_file().then_some(p)
+}
+
 async fn do_install(app: &AppHandle, st: &AppState, id: &str) -> Result<(), String> {
     let _one_at_a_time = st.install_lock.lock().await;
     let inst = instance::load(&st.data, id).map_err(es)?;
+    if inst.loader == Loader::Rust {
+        // لعبة أصلية: لا تنزيل من Mojang ولا Java. نتحقق فقط أنها موجودة ونجهّز مجلد الـ instance.
+        rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall Horizon Rust Clean)")?;
+        std::fs::create_dir_all(instance::game_dir(&st.data, id)).map_err(es)?;
+        instance::set_installed(&st.data, id, true).map_err(es)?;
+        return Ok(());
+    }
     let shared = st.data.join("shared");
     let manifest = get_manifest(st).await?;
     let entry = manifest
@@ -204,6 +218,18 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
         return Err("Instance is not installed yet".into());
     }
     let s = settings::load(&st.data);
+    if inst.loader == Loader::Rust {
+        let exe = rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall Horizon Rust Clean)")?;
+        let gd = instance::game_dir(&st.data, id);
+        std::fs::create_dir_all(&gd).map_err(es)?;
+        let cmd = LaunchCommand {
+            program: exe,
+            args: vec!["--dir".into(), gd.to_string_lossy().into_owned(), "--user".into(), s.username.clone()],
+            working_dir: gd,
+        };
+        let _ = app.emit("console", ConsoleLine { id: id.to_string(), err: false, line: format!("[launcher] {} [{}] (native Rust game, no Java)", inst.name, inst.loader.label()) });
+        return spawn_and_track(app, id, cmd).await;
+    }
     let shared = st.data.join("shared");
     let version = install::load_version(&shared, inst.launch_version_id()).map_err(es)?;
 
@@ -259,6 +285,10 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
 
     sys(format!("[launcher] {} [{}] ({}) — java: {}", inst.name, inst.loader.label(), inst.launch_version_id(), java_path.display()));
 
+    spawn_and_track(app, id, cmd).await
+}
+
+async fn spawn_and_track(app: &AppHandle, id: &str, cmd: LaunchCommand) -> Result<(), String> {
     let app2 = app.clone();
     let id2 = id.to_string();
     let mut child = spawn(&cmd, move |is_err, line| {

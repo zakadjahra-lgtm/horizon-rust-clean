@@ -42,7 +42,7 @@ jobs:
       - name: Build Horizon Client (Java agent)
         run: mvn -B -q -f client/pom.xml package
       - name: Build app and CLI (release)
-        run: cargo build --release -p hrc-app -p hrc-cli
+        run: cargo build --release -p hrc-app -p hrc-cli -p hrc-rustgame
       - name: Place agent next to the exe
         shell: pwsh
         run: Copy-Item client\target\horizon-client.jar target\release\horizon-client.jar
@@ -51,7 +51,7 @@ jobs:
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
-          & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" "/DAgentJar=..\target\release\horizon-client.jar" installer\horizon.iss
+          & $iscc "/DAppExe=..\target\release\horizon-rust-clean.exe" "/DCliExe=..\target\release\hrc-cli.exe" "/DAgentJar=..\target\release\horizon-client.jar" "/DRustGame=..\target\release\horizon-rust-game.exe" installer\horizon.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Get-ChildItem installer\Output
       - name: Test installer (silent install, files, CLI, real network, real install)
@@ -60,7 +60,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $dir = "C:\hrc-installed"
           Start-Process -FilePath "installer\Output\HorizonRustClean-Setup.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait
-          foreach ($f in "horizon-rust-clean.exe","hrc-cli.exe","horizon-client.jar") {
+          foreach ($f in "horizon-rust-clean.exe","hrc-cli.exe","horizon-client.jar","horizon-rust-game.exe") {
             if (-not (Test-Path "$dir\$f")) { throw "MISSING after install: $f" }
             Write-Host "PASS installed $f ($((Get-Item "$dir\$f").Length) bytes)"
           }
@@ -74,6 +74,12 @@ jobs:
           & "$dir\hrc-cli.exe" install 1.20.1
           if ($LASTEXITCODE -ne 0) { throw "hrc-cli install failed on Windows" }
           Remove-Item Env:HRC_LOADER
+          Write-Host "--- Horizon Rust game: real render on Windows (DX12/Vulkan, software adapter if no GPU) ---"
+          & "$dir\horizon-rust-game.exe" --screenshot "$env:RUNNER_TEMP\rust.png" --size 640x360 --user Tester
+          if ($LASTEXITCODE -ne 0) { throw "horizon-rust-game --screenshot failed on Windows" }
+          $png = Get-Item "$env:RUNNER_TEMP\rust.png"
+          if ($png.Length -lt 5000) { throw "rust screenshot too small: $($png.Length) bytes" }
+          Write-Host "PASS Horizon Rust rendered a frame on Windows ($($png.Length) bytes)"
           Write-Host "--- GUI starts ---"
           $p = Start-Process -FilePath "$dir\horizon-rust-clean.exe" -PassThru
           Start-Sleep -Seconds 20
@@ -88,6 +94,7 @@ jobs:
             target/release/horizon-rust-clean.exe
             target/release/hrc-cli.exe
             target/release/horizon-client.jar
+            target/release/horizon-rust-game.exe
             installer/Output/HorizonRustClean-Setup.exe
 
   # تشغيل حقيقي للعبة تحت شاشة افتراضية مع Horizon Client، ثم لقطة شاشة تُرفع لفرع ci-shots-<version>
@@ -150,7 +157,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" CHANGELOG.md STATUS.md \
+          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name horizon-rust-game.exe | head -1)" CHANGELOG.md STATUS.md \
             --repo "${{ github.repository }}" \
             --title "Horizon Rust Clean $TAG (test build)" \
             --prerelease \

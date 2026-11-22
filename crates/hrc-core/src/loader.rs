@@ -19,6 +19,8 @@ pub enum Loader {
     Neoforge,
     /// Minecraft الأصلية + عميل Horizon (HUD عبر Java agent، تجريبي).
     Horizon,
+    /// لعبة Rust أصلية تجريبية (ليست Minecraft): بلا Java ولا إصدارات Minecraft ولا مودات.
+    Rust,
 }
 
 impl Loader {
@@ -30,6 +32,7 @@ impl Loader {
             "forge" => Some(Self::Forge),
             "neoforge" => Some(Self::Neoforge),
             "horizon" => Some(Self::Horizon),
+            "rust" => Some(Self::Rust),
             _ => None,
         }
     }
@@ -42,6 +45,7 @@ impl Loader {
             Self::Forge => "Forge",
             Self::Neoforge => "NeoForge",
             Self::Horizon => "Horizon Client (beta)",
+            Self::Rust => "Horizon Rust (experimental)",
         }
     }
 
@@ -341,6 +345,7 @@ pub struct Installed {
 pub async fn install(client: &reqwest::Client, shared: &Path, l: Loader, mc: &str, java: &Path) -> Result<Installed> {
     let vanilla = || Installed { loader_version: None, launch_id: mc.to_string() };
     match l {
+        Loader::Rust => err("Horizon Rust is a native game: nothing to install from Mojang"),
         Loader::Vanilla => Ok(vanilla()),
         Loader::Horizon if crate::perf::legacy_hud_supported(mc) => Ok(vanilla()),
         Loader::Fabric | Loader::Quilt | Loader::Horizon => {
@@ -380,6 +385,9 @@ mod tests {
         assert_eq!(Loader::Horizon.mods_loader("1.20.1"), Some(Loader::Fabric));
         assert_eq!(Loader::Horizon.mods_loader("1.8.9"), None);
         assert_eq!(Loader::Vanilla.mods_loader("1.20.1"), None);
+        assert_eq!(Loader::parse("rust"), Some(Loader::Rust));
+        assert_eq!(Loader::Rust.mods_loader("1.20.1"), None);
+        assert!(!Loader::Rust.supports_mods() && Loader::Rust.modrinth_loader().is_none());
         assert!(Loader::Fabric.supports_mods() && !Loader::Vanilla.supports_mods() && !Loader::Horizon.supports_mods());
         assert_eq!(Loader::Quilt.modrinth_loader(), Some("quilt"));
         assert_eq!(Loader::Vanilla.modrinth_loader(), None);
