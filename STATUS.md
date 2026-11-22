@@ -33,3 +33,12 @@ Microsoft Authentication (حالياً Offline للتجربة فقط)، وضعا
 - نطاقها الحالي: LWJGL 2 فقط (1.8 – 1.12.2). كل المودات مطفأة افتراضياً وتُضبط عبر `horizon-client.properties` في مجلد اللعبة.
 - ملاحظة: في CI يفشل أول تشغيل أحياناً بخطأ `LinuxDisplay.getAvailableDisplayModes` تحت X افتراضي؛ لا يظهر على Windows الحقيقي، والسكربت يعيد المحاولة.
 - **لم يُنفَّذ بعد:** قائمة داخل اللعبة (Right Shift) وتعديل أماكن الـ HUD، Toggle Sprint/Zoom/Coordinates/Armor (تحتاج داخل Minecraft)، LWJGL 3 (1.13+)، OpenGL core profile (1.17+)، ودمج الـ agent في اللانشر (خيار تفعيل + شحنه في الـ Installer).
+
+## المراجع والتراخيص + Profiles + FPS presets (2026-11-22)
+- **وثيقة المراجع:** `docs/REFERENCES.md` (فحص المرفقات وصفحات المستودعات)، و`THIRD_PARTY_NOTICES.md` (ASM مشحون داخل الـ agent).
+- **اختُبر على CI:** 35 اختبار وحدة (Profiles، presets، أهلية Sodium/Lithium حسب الإصدار، ربط profile بكل instance).
+- **اختُبر على CI (تشغيل حقيقي):** 1.8.9 اشتغلت بإعدادات JVM الخاصة بـ `balanced` مع الـ agent، والـ JVM قبل الأعلام (لا `Unrecognized VM option`) على Java 8 فقط.
+- **لم يُقَس:** أي مكسب فعلي في FPS من الـ presets (لا benchmark بعد). لا يجوز ذكر أرقام تحسين قبل القياس.
+- **لم يُختبر:** الـ presets على Java 17/21 (1.17+)، لأن الـ agent وطبقة HUD تدعم 1.8–1.12.2 فقط حالياً.
+- **غير مربوط بعد بالواجهة:** Profiles موجودة في `hrc-core` فقط؛ لا شاشة لها في اللانشر ولا أوامر Tauri، والـ Installer لا يشحن `horizon-client.jar` بعد.
+- **غير مبني:** Mod Manager (Modrinth + Fabric)، وقائمة داخل اللعبة، ودعم LWJGL 3.
