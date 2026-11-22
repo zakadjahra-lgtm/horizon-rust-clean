@@ -14,6 +14,20 @@
 | **Windows installer (x64)** | Silent install; `horizon-rust-clean.exe`, `hrc-cli.exe`, `horizon-client.jar` present; `hrc-cli.exe` ran on Windows (netcheck reached Mojang, Fabric, Quilt, Forge, NeoForge; Fabric 1.20.1 install completed); the GUI stayed alive 20 s with window title "Horizon Rust Clean". |
 | Install-only matrix | Fabric 1.16.5/1.18/1.20.1/1.21.1/26.3 · Quilt 1.18.2/1.20.1/1.21.1 · Forge 1.12.2/1.16.5/1.18.2/1.20.1/1.21.1/26.3 · NeoForge 1.20.4/1.21.1/26.3 |
 
+## Horizon Rust (experimental) — native Rust game (added after v0.3.1, not released yet)
+
+**What it is:** a small voxel game prototype written from scratch in Rust (`crates/hrc-rustgame`: wgpu + winit, no Mojang code or assets). Generated terrain, face-culled chunk meshes, fly camera (WASD / Space / Shift / Ctrl, mouse look), bitmap-font HUD (FPS, position, chunks, faces), position saved in the instance folder, `horizon-rust.properties` for seed/radius/vsync. In the launcher it is the environment "Horizon Rust (experimental)": no install download, no Java.
+
+**It is NOT Minecraft:** it cannot open Minecraft worlds, join Minecraft servers, or run Java mods/resource packs/shaders. It has no textures, no physics or collisions, no block placing/breaking, no sound, no entities.
+
+**Verified by CI:**
+- Unit tests (terrain determinism, mesh face culling incl. across chunk borders, font, config/args/save parsing) pass on Linux and Windows.
+- Real GPU-API render without a window on Linux (Vulkan software adapter llvmpipe): a frame was rendered and saved as PNG; I looked at the screenshot (terrain + HUD correct). 19 fps at 1280x720 on that CPU renderer, 145k faces.
+- Window mode under Xvfb on Linux stayed alive 20 s and drew frames (screenshot viewed; 42 fps on CPU rendering).
+- Windows x64 (installed by the installer): the exe is present and rendered a frame on the "Microsoft Basic Render Driver" (DX12, software) adapter.
+
+**NOT verified:** performance on a real GPU (the 591 fps seen in your screenshot was not produced by anything I built); the launcher flow (create instance -> Install -> Play spawning the game from the GUI) has not been clicked through by any test; interactive input (mouse capture, keys) was never exercised; macOS.
+
 ## NOT verified (do not assume these work)
 - **Launching the game on Windows.** The Windows CI runner has no GPU, so only install + GUI start were tested there. Launch was tested on Linux with software rendering.
 - Real-GPU performance, and any **FPS gain** (presets and Sodium/Lithium are not benchmarked).

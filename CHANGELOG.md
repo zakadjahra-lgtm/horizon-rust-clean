@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+### Added
+- **Horizon Rust (experimental)**: a new environment type that is a native game written in Rust (wgpu + winit), NOT Minecraft. Generated block world, fly camera, FPS/position HUD, position saved per instance. No Java, no Minecraft versions, no mods.
+- `horizon-rust-game(.exe)` is built in CI and bundled in the installer.
+
 ## 0.3.1 — 2026-11-22
 
 ### Added
