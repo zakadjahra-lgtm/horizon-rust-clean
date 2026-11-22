@@ -50,3 +50,11 @@ Each instance has its own folder with its own `mods/`, `resourcepacks/`, `shader
 **Verified on CI (commit 92e99dd):** unit tests (folder isolation, mod toggle/list/delete, path-safety); `hrc-cli install` succeeds for Fabric 1.20.1, Quilt 1.20.1, Forge 1.20.1 and 1.12.2, NeoForge 1.21.1, Horizon 1.8.9 and 1.20.1 (the launch profile is created and the version JSON exists); the Tauri app and the TypeScript UI compile; the installer now bundles `horizon-client.jar`.
 
 **NOT verified yet:** actually launching a Fabric/Quilt/Forge/NeoForge game; the new UI screens (Content page, environment tabs, Horizon panel) on a real machine; FPS gains of the performance presets (not benchmarked). The Horizon "Rust mods" and the curated Fabric light-mod downloader (Modrinth) are not built yet — mods are currently added by dropping files into the instance's folder via "Open folder".
+
+## Mod manager and Rust mods (beta)
+
+**Verified on CI:** `hrc-cli mod` downloads real mods from the Modrinth API with Modrinth's SHA1 check and required dependencies: Sodium and Lithium on Fabric 1.20.1, Lithium on Quilt 1.20.1, Ferrite Core on Horizon 1.20.1 (Fabric base). Unit tests cover version/file picking, URL encoding and the Rust mods (log cleaner, crash cleaner, screenshot sorter; all off by default, `latest.log` is never deleted).
+
+**Not verified:** that the downloaded mods actually load and run in a launched game; the "Get mods" UI and Rust-mod toggles on a real machine; FPS gains. Sodium's license is PolyForm Shield, so it is downloaded from Modrinth on request and never bundled.
+
+**Honest scope:** "Rust mods" are small launcher-side tools that run before the game starts; they do not modify Minecraft. The in-game HUD (FPS/CPS/Keystrokes) still works only on 1.8-1.12.2; on 1.13+ Horizon runs on a Fabric base without a HUD yet (LWJGL3 needs a different hook). Accounts: offline only (no Microsoft login, by decision).
