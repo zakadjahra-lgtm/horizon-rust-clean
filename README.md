@@ -52,3 +52,4 @@ crates/hrc-cli    أداة سطر أوامر للاختبار بدون واجه�
 cargo test --workspace
 cargo build --release -p hrc-cli
 ```
+## by:marwan                                                                                                                                                                  ##https://discord.gg/gJ9kDNF24
