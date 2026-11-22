@@ -1,0 +1,21 @@
+[package]
+name = "hrc-rustgame"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Horizon Rust (experimental): a native voxel game prototype written in Rust. Not Minecraft."
+
+[[bin]]
+name = "horizon-rust-game"
+path = "src/main.rs"
+
+[dependencies]
+wgpu = "0.19"
+winit = "0.29"
+bytemuck = { version = "1", features = ["derive"] }
+glam = "0.27"
+pollster = "0.3"
+image = { version = "0.25", default-features = false, features = ["png"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/hrc-core", "crates/hrc-cli", "src-tauri"]
+members = ["crates/hrc-core", "crates/hrc-cli", "crates/hrc-rustgame", "src-tauri"]
 
 [workspace.package]
 version = "0.3.1"
@@ -12,3 +12,7 @@ lto = true
 codegen-units = 1
 strip = true
 opt-level = "s"
+
+# اللعبة تحتاج سرعة لا حجماً
+[profile.release.package.hrc-rustgame]
+opt-level = 3

@@ -328,3 +328,54 @@ jobs:
           check "no jar shared between fabric and quilt instances" '[ -z "$(comm -12 <(cd "$I/cli-fabric-1.20.1/game/mods" && ls | sort) <(cd "$I/cli-quilt-1.20.1/game/mods" && ls | sort))" ]'
           check "loader versions live side by side in shared/versions" 'ls "$HRC_DATA/shared/versions" | grep -q fabric-loader && ls "$HRC_DATA/shared/versions" | grep -q quilt-loader'
           exit $fail
+
+  # لعبة Rust الأصلية التجريبية: بناء + اختبارات + رسم حقيقي بدون نافذة عبر Vulkan البرمجي (lavapipe) + لقطة
+  rustgame-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers libvulkan1 vulkan-tools imagemagick xvfb x11-utils libxkbcommon-x11-0 libx11-xcb1
+      - run: cargo build --release -p hrc-rustgame
+      - name: Headless render to PNG
+        run: |
+          mkdir -p ci-out
+          ./target/release/horizon-rust-game --screenshot ci-out/rustgame.png --size 1280x720 --user Tester 2>&1 | tee ci-out/rustgame.log
+          grep -q "Saved screenshot" ci-out/rustgame.log
+          colors=$(convert ci-out/rustgame.png -format %k info:)
+          echo "unique colors: $colors"
+          [ "$colors" -ge 200 ] || { echo "FAIL screenshot looks empty"; exit 1; }
+          echo "PASS headless render has content"
+      - name: Window mode under Xvfb (stays alive, then screenshot)
+        continue-on-error: true
+        run: |
+          Xvfb :98 -screen 0 1280x720x24 +extension GLX +render -noreset >/dev/null 2>&1 &
+          sleep 3
+          export DISPLAY=:98
+          ./target/release/horizon-rust-game --dir ci-out/inst --user Tester > ci-out/rustgame-window.log 2>&1 &
+          GP=$!
+          sleep 20
+          kill -0 $GP && echo "PASS window mode alive after 20 s" || { echo "FAIL window mode exited"; cat ci-out/rustgame-window.log; exit 1; }
+          import -window root ci-out/rustgame-window.png
+          kill $GP; sleep 2
+          cat ci-out/rustgame-window.log
+          test -s ci-out/inst/horizon-rust-save.txt && echo "PASS save file written on exit" || echo "NOTE no save file (process was killed, not closed)"
+      - name: Publish screenshot and log to branch ci-shots-rustgame
+        if: always()
+        run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@users.noreply.github.com"
+          d=$(mktemp -d)
+          cp ci-out/*.png ci-out/*.log "$d"/ 2>/dev/null || true
+          cd "$d"
+          git init -q -b shots
+          git add -A
+          git commit -q -m "rustgame shots ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" shots:refs/heads/ci-shots-rustgame
