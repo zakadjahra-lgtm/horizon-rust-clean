@@ -27,16 +27,18 @@ let instances: Instance[] = [];
 let versions: VersionInfo[] = [];
 let settings: Settings = { username: 'Player', default_ram_mb: 2048, java_path: null };
 // كل نوع بيئة = instances مستقلة بمجلداتها (مودات/حزم موارد/shaders) ولا تتشارك شيئاً.
-const LOADERS = [
+const LOADERS: { id: string; label: string; hint: string; hidden?: boolean }[] = [
   { id: 'vanilla', label: 'Vanilla', hint: 'Original Minecraft, no mods. Resource packs work; shaders need a shader mod.' },
   { id: 'fabric', label: 'Fabric', hint: 'Lightweight mod loader (Minecraft 1.14 and newer). Mods stay inside this instance only.' },
   { id: 'quilt', label: 'Quilt', hint: 'Fabric-compatible mod loader (Minecraft 1.14 and newer).' },
   { id: 'forge', label: 'Forge', hint: 'Installed with Forge\'s official installer; the first install can take a few minutes.' },
   { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
-  { id: 'rusttools', label: 'Horizon (Rust tools)', hint: 'Original Minecraft (Java), any version. No mods and nothing injected into the game. The launcher (Rust) adds an optional performance preset and tools: log cleaner, crash cleaner, screenshot sorter.' },
-  { id: 'rust', label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
-  { id: 'horizon', label: 'Horizon Client (beta)', hint: 'Our clean client (beta). HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
+  { id: 'rusttools', hidden: true, label: 'Horizon (Rust tools)', hint: 'Original Minecraft (Java), any version. No mods and nothing injected into the game. The launcher (Rust) adds an optional performance preset and tools: log cleaner, crash cleaner, screenshot sorter.' },
+  { id: 'rust', hidden: true, label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
+  { id: 'horizon', label: 'Rust', hint: 'Our clean client. HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
+// الإدخالان المخفيان لا يظهران في القوائم؛ تبقى المعرّفات حتى لا تتعطل instances قديمة.
+const SHOWN = LOADERS.filter((l) => !l.hidden);
 const RUST_VERSION = 'horizon-rust-0.1';
 const isRust = (i: Instance): boolean => i.loader === 'rust';
 const loaderLabel = (id: string): string => LOADERS.find((l) => l.id === id)?.label ?? id;
@@ -207,7 +209,7 @@ function renderInstances(): HTMLElement {
   const ram = h('input', { class: 'input', type: 'number', min: 512, step: 256, value: settings.default_ram_mb, style: 'width:110px' }) as HTMLInputElement;
   const verSel = h('select', { class: 'input' }, h('option', { value: '' }, 'Loading versions…')) as HTMLSelectElement;
   const loaderSel = h('select', { class: 'input', style: 'min-width:200px' },
-    ...LOADERS.map((l) => h('option', { value: l.id }, l.label))) as HTMLSelectElement;
+    ...SHOWN.map((l) => h('option', { value: l.id }, l.label))) as HTMLSelectElement;
   if (filterLoader !== 'all') loaderSel.value = filterLoader;
   const hint = h('p', { class: 'muted', style: 'margin:8px 0 0' }, '');
   const setHint = (): void => {
@@ -243,10 +245,10 @@ function renderInstances(): HTMLElement {
 
   // تبويبات: كل بيئة لها مكانها
   const tabs = h('div', { class: 'row', style: 'margin:6px 0 14px' },
-    ...[{ id: 'all', label: 'All' }, ...LOADERS].map((l) => h('button', {
+    ...[{ id: 'all', label: 'All' }, ...SHOWN].map((l) => h('button', {
       class: 'btn' + (filterLoader === l.id ? ' primary' : ''),
       onclick: () => { filterLoader = l.id; render(); },
-    }, l.label.replace(' (beta)', ''))));
+    }, l.label)));
   wrap.append(tabs);
   const shown = instances.filter((i) => filterLoader === 'all' || i.loader === filterLoader);
   if (shown.length === 0) wrap.append(h('p', { class: 'muted' }, 'No instances in this environment yet.'));
@@ -391,7 +393,7 @@ function modBrowser(inst: Instance): HTMLElement {
 }
 
 function clientPanel(inst: Instance): HTMLElement {
-  const title = inst.loader === 'rusttools' ? 'Horizon (Rust tools)' : 'Horizon Client (beta)';
+  const title = inst.loader === 'rusttools' ? 'Horizon (Rust tools)' : 'Rust';
   const hud = inst.loader === 'horizon';
   const box = h('div', { class: 'card' }, h('h2', {}, title), h('span', { class: 'muted' }, 'Loading…'));
   const legacy = isLegacyMc(inst.version_id);
@@ -527,13 +529,92 @@ function renderSettings(): HTMLElement {
     }, 'Save')));
 }
 
+
+// ───────────── صفحة Browse: بحث عن مودات / حزم موارد / shaders على Modrinth ─────────────
+// اختيار الـ loader إلزامي للمودات (Fabric / Forge / NeoForge / Quilt)؛ التنزيل يذهب إلى instance
+// مطابق فقط، فلا تختلط ملفات loader بآخر.
+const BROWSE_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
+const browseState = { kind: 'mods', loader: '', mc: '', query: '', target: '' };
+
+function renderBrowse(): HTMLElement {
+  const st = browseState;
+  const wrap = h('div', {}, h('h1', {}, 'Browse'),
+    h('p', { class: 'muted' }, 'Search Modrinth and install into one of your instances. Files go only to the instance you pick.'));
+  const results = h('div', {}, h('span', { class: 'muted' }, 'Choose what you want and press Search.'));
+  const kindBtns = [['mods', 'Mods'], ['resourcepacks', 'Resource packs'], ['shaderpacks', 'Shaders']].map(([k, label]) =>
+    h('button', { class: 'btn' + (st.kind === k ? ' primary' : ''), onclick: () => { st.kind = k; st.target = ''; render(); } }, label));
+  const loaderSel = h('select', { class: 'input', onchange: (e: Event) => { st.loader = (e.target as HTMLSelectElement).value; st.target = ''; render(); } },
+    h('option', { value: '' }, 'Choose a loader…'),
+    ...BROWSE_LOADERS.map((l) => h('option', { value: l, selected: st.loader === l }, loaderLabel(l)))) as HTMLSelectElement;
+  const mcSel = h('select', { class: 'input', onchange: (e: Event) => { st.mc = (e.target as HTMLSelectElement).value; st.target = ''; render(); } },
+    h('option', { value: '' }, 'Any version')) as HTMLSelectElement;
+  void ensureVersions().then((ok) => {
+    if (!ok) return;
+    mcSel.append(...versions.filter((v) => v.kind === 'release').map((v) => h('option', { value: v.id, selected: st.mc === v.id }, v.id)));
+  });
+  const q = h('input', { class: 'input', placeholder: 'Search…', value: st.query, style: 'width:240px' }) as HTMLInputElement;
+
+  // instances مطابقة: للمودات نفس الـ loader (وإصدار Minecraft إن اختير)؛ للحزم أي instance ماين كرافت.
+  const compatible = instances.filter((i) => {
+    if (i.loader === 'rust') return false;
+    if (st.kind === 'mods' && !(i.loader === st.loader)) return false;
+    if (st.mc && i.version_id !== st.mc) return false;
+    return true;
+  });
+  if (!compatible.some((i) => i.id === st.target)) st.target = compatible[0]?.id ?? '';
+  const targetSel = h('select', { class: 'input', onchange: (e: Event) => { st.target = (e.target as HTMLSelectElement).value; } },
+    ...compatible.map((i) => h('option', { value: i.id, selected: st.target === i.id }, `${i.name} — ${loaderLabel(i.loader)} ${i.version_id}`))) as HTMLSelectElement;
+
+  const needLoader = st.kind === 'mods' && !st.loader;
+  const doSearch = async (): Promise<void> => {
+    st.query = q.value;
+    if (needLoader) { toast('Choose Fabric, Forge, NeoForge or Quilt first', true); return; }
+    results.replaceChildren(h('span', { class: 'muted' }, 'Searching…'));
+    try {
+      const hits: { slug: string; title: string; description: string; downloads: number }[] =
+        await invoke('browse_search', { kind: st.kind, loader: st.kind === 'mods' ? st.loader : null, mc: st.mc || null, query: q.value });
+      results.replaceChildren(...(hits.length ? hits.map((x) => h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line)' },
+        h('div', { class: 'grow' }, h('strong', {}, x.title), h('div', { class: 'muted' }, x.description),
+          h('div', { class: 'muted', style: 'font-size:12px' }, `${x.downloads.toLocaleString()} downloads`)),
+        h('button', {
+          class: 'btn', disabled: !st.target,
+          onclick: async (e: Event) => {
+            const b = e.target as HTMLButtonElement; b.disabled = true; b.textContent = 'Installing…';
+            try {
+              const got: string[] = await invoke('browse_install', { id: st.target, project: x.slug, kind: st.kind });
+              toast(got.length ? `Installed ${got.join(', ')}` : 'Already installed');
+              b.textContent = 'Installed';
+            } catch (err) { toast(errMsg(err), true); b.disabled = false; b.textContent = 'Install'; }
+          },
+        }, 'Install'))) : [h('span', { class: 'muted' }, 'No results.')]));
+    } catch (e) { results.replaceChildren(h('span', { class: 'muted' }, 'Could not reach Modrinth (' + errMsg(e) + ').')); }
+  };
+  q.addEventListener('keydown', (e) => { if (e.key === 'Enter') void doSearch(); });
+
+  const noTarget = compatible.length === 0 && !needLoader
+    ? h('p', { class: 'muted' }, st.kind === 'mods'
+      ? `No ${loaderLabel(st.loader)} instance${st.mc ? ' for ' + st.mc : ''} yet. Create one on the Instances page, then come back to install.`
+      : 'No instance yet. Create one on the Instances page first.')
+    : null;
+  wrap.append(h('div', { class: 'card' },
+    h('div', { class: 'row' }, ...kindBtns),
+    h('div', { class: 'row', style: 'margin-top:10px' }, ...(st.kind === 'mods' ? [loaderSel] : []), mcSel, q,
+      h('button', { class: 'btn primary', onclick: () => { void doSearch(); } }, 'Search')),
+    h('div', { class: 'row', style: 'margin-top:10px' }, h('span', { class: 'muted' }, 'Install into:'), targetSel),
+    noTarget,
+    st.kind === 'shaderpacks' ? h('p', { class: 'muted' }, 'Shaders also need a shader mod such as Iris in that instance.') : null,
+    h('p', { class: 'muted', style: 'margin-bottom:0' }, 'CurseForge is not included: its API needs a key issued to the app\'s author and is not set up here.')),
+    h('div', { class: 'card' }, results));
+  return wrap;
+}
+
 // ───────────── التنقل والتشغيل ─────────────
 function render(): void {
   consoleEl = null;
   document.querySelectorAll('.nav button').forEach((b) =>
     b.classList.toggle('active', (b as HTMLElement).dataset.page === (page === 'content' ? 'instances' : page)));
   const pages: Record<string, () => HTMLElement> = {
-    home: renderHome, instances: renderInstances, downloads: renderDownloads,
+    home: renderHome, instances: renderInstances, browse: renderBrowse, downloads: renderDownloads,
     java: renderJava, console: renderConsole, settings: renderSettings, content: renderContent,
   };
   view.replaceChildren((pages[page] ?? renderHome)());

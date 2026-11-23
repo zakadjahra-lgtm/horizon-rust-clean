@@ -483,6 +483,24 @@ async fn install_mod(st: State<'_, AppState>, id: String, project: String) -> Re
 }
 
 #[tauri::command]
+async fn browse_search(st: State<'_, AppState>, kind: String, loader: Option<String>, mc: Option<String>, query: String) -> Result<Vec<hrc_core::modrinth::Hit>, String> {
+    let kind = content::Kind::parse(&kind).ok_or("Unknown content type")?;
+    let loader = loader.as_deref().filter(|l| !l.is_empty()).and_then(Loader::parse);
+    hrc_core::modrinth::browse(&st.client, &query, kind, loader, mc.as_deref()).await.map_err(es)
+}
+
+#[tauri::command]
+async fn browse_install(st: State<'_, AppState>, id: String, project: String, kind: String) -> Result<Vec<String>, String> {
+    let kind = content::Kind::parse(&kind).ok_or("Unknown content type")?;
+    let inst = instance::load(&st.data, &id).map_err(es)?;
+    let dir = instance::game_dir(&st.data, &id);
+    match kind {
+        content::Kind::Mods => hrc_core::modrinth::install_mod(&st.client, &dir, &project, inst.loader, &inst.version_id).await.map_err(es),
+        _ => hrc_core::modrinth::install_pack(&st.client, &dir, &project, kind, &inst.version_id).await.map_err(es),
+    }
+}
+
+#[tauri::command]
 async fn net_check(st: State<'_, AppState>) -> Result<Vec<hrc_core::netcheck::Check>, String> {
     Ok(hrc_core::netcheck::run(&st.client).await)
 }
@@ -507,6 +525,8 @@ fn main() {
             curated_mods,
             net_check,
             search_mods,
+            browse_search,
+            browse_install,
             install_mod,
             list_instances,
             create_instance,

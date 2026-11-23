@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Browse** page (sidebar): search Modrinth for mods, resource packs and shaders and install into a chosen instance. Mods need a loader chosen first (Fabric, Forge, NeoForge or Quilt) and only go to an instance with that loader. Unit-tested: the search URL rules. NOT yet tested: the page in the running app, real downloads of packs.
+
+### Changed
+- "Horizon Client (beta)" is now called "Rust" in the UI.
+- "Horizon (Rust tools)" and "Horizon Rust (experimental)" no longer appear in the create-instance list or the tabs (existing instances of those kinds still work).
+- CurseForge is not supported (its API needs a key issued to the app's author).
+
 ## 0.4.0 — 2026-11-22
 
 ### Added

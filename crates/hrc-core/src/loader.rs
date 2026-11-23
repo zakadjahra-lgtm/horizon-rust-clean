@@ -47,7 +47,7 @@ impl Loader {
             Self::Quilt => "Quilt",
             Self::Forge => "Forge",
             Self::Neoforge => "NeoForge",
-            Self::Horizon => "Horizon Client (beta)",
+            Self::Horizon => "Rust",
             Self::RustTools => "Horizon (Rust tools)",
             Self::Rust => "Horizon Rust (experimental)",
         }

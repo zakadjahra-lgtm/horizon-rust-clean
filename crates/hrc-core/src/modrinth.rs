@@ -179,6 +179,58 @@ pub async fn install_mod(
     Ok(done)
 }
 
+/// ما يبحث عنه صفحة Browse: مودات (لها loader إلزامي)، حزم موارد، أو shaders.
+fn project_type(kind: Kind) -> &'static str {
+    match kind {
+        Kind::Mods => "mod",
+        Kind::ResourcePacks => "resourcepack",
+        Kind::ShaderPacks => "shader",
+    }
+}
+
+/// رابط بحث عام. للمودات يلزم loader حقيقي (Fabric/Quilt/Forge/NeoForge) وإلا `None`؛ حزم الموارد
+/// والـ shaders لا ترتبط بـ loader. إصدار Minecraft اختياري.
+pub fn browse_url(query: &str, kind: Kind, loader: Option<Loader>, mc: Option<&str>) -> Option<String> {
+    let mut facets = vec![vec![format!("project_type:{}", project_type(kind))]];
+    if kind == Kind::Mods {
+        facets.push(vec![format!("categories:{}", loader?.modrinth_loader()?)]);
+    }
+    if let Some(v) = mc.filter(|v| !v.is_empty()) {
+        facets.push(vec![format!("versions:{v}")]);
+    }
+    let facets = serde_json::to_string(&facets).ok()?;
+    Some(format!("{API}/search?query={}&facets={}&limit=20&index=relevance", enc(query), enc(&facets)))
+}
+
+pub async fn browse(client: &reqwest::Client, query: &str, kind: Kind, loader: Option<Loader>, mc: Option<&str>) -> Result<Vec<Hit>> {
+    let Some(url) = browse_url(query, kind, loader, mc) else { return err("اختر Fabric أو Forge أو NeoForge أو Quilt للبحث عن مودات") };
+    let r: SearchResp = client.get(url).send().await?.error_for_status()?.json().await?;
+    Ok(r.hits.into_iter().map(|h| Hit { slug: h.slug, title: h.title, description: h.description, downloads: h.downloads }).collect())
+}
+
+/// ينزّل حزمة موارد أو shader (ملف .zip واحد) إلى مجلدها داخل الـ instance، مع SHA1 من Modrinth.
+pub async fn install_pack(client: &reqwest::Client, game_dir: &Path, project: &str, kind: Kind, mc: &str) -> Result<Vec<String>> {
+    if kind == Kind::Mods {
+        return err("المودات تُثبَّت عبر install_mod");
+    }
+    let url = format!("{API}/project/{}/version?game_versions={}", enc(project), enc(&format!(r#"["{mc}"]"#)));
+    let vs: Vec<Version> = client.get(url).send().await?.error_for_status()?.json().await?;
+    let Some(v) = pick_version(&vs) else { return err(format!("لا يوجد إصدار من هذه الحزمة لـ {mc}")) };
+    let Some(f) = pick_file(v) else { return err("لا ملف في هذا الإصدار") };
+    if !safe_file_name(&f.filename) || !f.filename.ends_with(".zip") {
+        return err("اسم ملف غير آمن أو ليس .zip");
+    }
+    let folder = content::dir(game_dir, kind);
+    std::fs::create_dir_all(&folder)?;
+    let dest = folder.join(&f.filename);
+    if dest.exists() {
+        return Ok(Vec::new());
+    }
+    let job = Job { url: f.url.clone(), dest, sha1: f.hashes.sha1.clone(), size: if f.size > 0 { Some(f.size) } else { None } };
+    fetch(client, &job, &Progress::default()).await?;
+    Ok(vec![f.filename.clone()])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -215,5 +267,17 @@ mod tests {
         for (s, _) in CURATED_FABRIC {
             assert!(s.chars().all(|c| c.is_ascii_lowercase() || c == '-'));
         }
+    }
+
+    #[test]
+    fn browse_needs_a_loader_for_mods_only() {
+        let m = browse_url("fps", Kind::Mods, Some(Loader::Forge), Some("1.20.1")).unwrap();
+        assert!(m.contains("project_type%3Amod") && m.contains("categories%3Aforge") && m.contains("versions%3A1.20.1"));
+        assert!(browse_url("fps", Kind::Mods, None, None).is_none());
+        assert!(browse_url("fps", Kind::Mods, Some(Loader::Vanilla), None).is_none());
+        let r = browse_url("faithful", Kind::ResourcePacks, None, None).unwrap();
+        assert!(r.contains("project_type%3Aresourcepack") && !r.contains("categories"));
+        let sh = browse_url("bsl", Kind::ShaderPacks, None, Some("")).unwrap();
+        assert!(sh.contains("project_type%3Ashader") && !sh.contains("versions"));
     }
 }
