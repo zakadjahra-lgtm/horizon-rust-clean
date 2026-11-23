@@ -482,18 +482,31 @@ async fn install_mod(st: State<'_, AppState>, id: String, project: String) -> Re
         .map_err(es)
 }
 
+/// مفتاح CurseForge: متغير البيئة أولاً، ثم إعدادات المستخدم. لا مفتاح مضمَّن في البرنامج.
+fn curseforge_key(data: &Path) -> Option<String> {
+    std::env::var("HRC_CURSEFORGE_KEY").ok().filter(|k| !k.trim().is_empty()).or_else(|| settings::load(data).curseforge_key)
+}
+
 #[tauri::command]
-async fn browse_search(st: State<'_, AppState>, kind: String, loader: Option<String>, mc: Option<String>, query: String) -> Result<Vec<hrc_core::modrinth::Hit>, String> {
+async fn browse_search(st: State<'_, AppState>, source: Option<String>, kind: String, loader: Option<String>, mc: Option<String>, query: String) -> Result<Vec<hrc_core::modrinth::Hit>, String> {
     let kind = content::Kind::parse(&kind).ok_or("Unknown content type")?;
     let loader = loader.as_deref().filter(|l| !l.is_empty()).and_then(Loader::parse);
+    if source.as_deref() == Some("curseforge") {
+        let key = curseforge_key(&st.data);
+        return hrc_core::curseforge::search(&st.client, key.as_deref(), &query, kind, loader, mc.as_deref()).await.map_err(es);
+    }
     hrc_core::modrinth::browse(&st.client, &query, kind, loader, mc.as_deref()).await.map_err(es)
 }
 
 #[tauri::command]
-async fn browse_install(st: State<'_, AppState>, id: String, project: String, kind: String) -> Result<Vec<String>, String> {
+async fn browse_install(st: State<'_, AppState>, source: Option<String>, id: String, project: String, kind: String) -> Result<Vec<String>, String> {
     let kind = content::Kind::parse(&kind).ok_or("Unknown content type")?;
     let inst = instance::load(&st.data, &id).map_err(es)?;
     let dir = instance::game_dir(&st.data, &id);
+    if source.as_deref() == Some("curseforge") {
+        let key = curseforge_key(&st.data);
+        return hrc_core::curseforge::install(&st.client, key.as_deref(), &dir, &project, kind, inst.loader, &inst.version_id).await.map_err(es);
+    }
     match kind {
         content::Kind::Mods => hrc_core::modrinth::install_mod(&st.client, &dir, &project, inst.loader, &inst.version_id).await.map_err(es),
         _ => hrc_core::modrinth::install_pack(&st.client, &dir, &project, kind, &inst.version_id).await.map_err(es),

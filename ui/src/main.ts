@@ -12,7 +12,7 @@ interface ClientProfile {
   mods: Record<string, { enabled: boolean; x: number; y: number }>;
 }
 interface VersionInfo { id: string; kind: string }
-interface Settings { username: string; default_ram_mb: number; java_path: string | null }
+interface Settings { username: string; default_ram_mb: number; java_path: string | null; curseforge_key?: string | null }
 interface Prog { phase: string; done: number; total: number; files_done: number; files_total: number; speed: number }
 interface ConsoleLine { id: string; err: boolean; line: string; sys?: boolean }
 interface JavaInfo { installed: string[]; manual: string | null; data_dir: string }
@@ -506,6 +506,7 @@ function netCheckCard(): HTMLElement {
 function renderSettings(): HTMLElement {
   const user = h('input', { class: 'input', value: settings.username }) as HTMLInputElement;
   const ram = h('input', { class: 'input', type: 'number', min: 512, step: 256, value: settings.default_ram_mb }) as HTMLInputElement;
+  const cfKey = h('input', { class: 'input', type: 'password', placeholder: 'API key', value: settings.curseforge_key ?? '', style: 'width:320px' }) as HTMLInputElement;
   const dataDir = h('span', { class: 'muted' }, '…');
   void invoke('java_info').then((j: JavaInfo) => { dataDir.textContent = j.data_dir; }).catch(() => { /* */ });
   return h('div', {}, h('h1', {}, 'Settings'),
@@ -516,12 +517,15 @@ function renderSettings(): HTMLElement {
     h('div', { class: 'card' }, h('h2', {}, 'Default RAM for new instances (MB)'), ram),
     h('div', { class: 'card' }, h('h2', {}, 'Data folder'), h('div', { class: 'row' }, dataDir,
       h('button', { class: 'btn', onclick: () => { void invoke('open_data_folder'); } }, 'Open'))),
+    h('div', { class: 'card' }, h('h2', {}, 'CurseForge API key (optional)'),
+      h('p', { class: 'muted' }, 'Get a free key at console.curseforge.com. It is kept only in this computer\'s settings file and is used for CurseForge searches in Browse.'),
+      cfKey),
     netCheckCard(),
     h('div', { class: 'row' }, h('button', {
       class: 'btn primary',
       onclick: async () => {
         try {
-          const next: Settings = { ...settings, username: user.value.trim(), default_ram_mb: Number(ram.value) || 2048 };
+          const next: Settings = { ...settings, username: user.value.trim(), default_ram_mb: Number(ram.value) || 2048, curseforge_key: cfKey.value.trim() || null };
           await invoke('save_settings', { settings: next });
           settings = next; toast('Saved'); render();
         } catch (e) { toast(errMsg(e), true); }
@@ -534,7 +538,7 @@ function renderSettings(): HTMLElement {
 // اختيار الـ loader إلزامي للمودات (Fabric / Forge / NeoForge / Quilt)؛ التنزيل يذهب إلى instance
 // مطابق فقط، فلا تختلط ملفات loader بآخر.
 const BROWSE_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
-const browseState = { kind: 'mods', loader: '', mc: '', query: '', target: '' };
+const browseState = { source: 'modrinth', kind: 'mods', loader: '', mc: '', query: '', target: '' };
 
 function renderBrowse(): HTMLElement {
   const st = browseState;
@@ -572,7 +576,7 @@ function renderBrowse(): HTMLElement {
     results.replaceChildren(h('span', { class: 'muted' }, 'Searching…'));
     try {
       const hits: { slug: string; title: string; description: string; downloads: number }[] =
-        await invoke('browse_search', { kind: st.kind, loader: st.kind === 'mods' ? st.loader : null, mc: st.mc || null, query: q.value });
+        await invoke('browse_search', { source: st.source, kind: st.kind, loader: st.kind === 'mods' ? st.loader : null, mc: st.mc || null, query: q.value });
       results.replaceChildren(...(hits.length ? hits.map((x) => h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line)' },
         h('div', { class: 'grow' }, h('strong', {}, x.title), h('div', { class: 'muted' }, x.description),
           h('div', { class: 'muted', style: 'font-size:12px' }, `${x.downloads.toLocaleString()} downloads`)),
@@ -581,13 +585,13 @@ function renderBrowse(): HTMLElement {
           onclick: async (e: Event) => {
             const b = e.target as HTMLButtonElement; b.disabled = true; b.textContent = 'Installing…';
             try {
-              const got: string[] = await invoke('browse_install', { id: st.target, project: x.slug, kind: st.kind });
+              const got: string[] = await invoke('browse_install', { source: st.source, id: st.target, project: x.slug, kind: st.kind });
               toast(got.length ? `Installed ${got.join(', ')}` : 'Already installed');
               b.textContent = 'Installed';
             } catch (err) { toast(errMsg(err), true); b.disabled = false; b.textContent = 'Install'; }
           },
         }, 'Install'))) : [h('span', { class: 'muted' }, 'No results.')]));
-    } catch (e) { results.replaceChildren(h('span', { class: 'muted' }, 'Could not reach Modrinth (' + errMsg(e) + ').')); }
+    } catch (e) { results.replaceChildren(h('span', { class: 'muted' }, 'Could not search ' + (st.source === 'curseforge' ? 'CurseForge' : 'Modrinth') + ' (' + errMsg(e) + ').')); }
   };
   q.addEventListener('keydown', (e) => { if (e.key === 'Enter') void doSearch(); });
 
@@ -597,13 +601,15 @@ function renderBrowse(): HTMLElement {
       : 'No instance yet. Create one on the Instances page first.')
     : null;
   wrap.append(h('div', { class: 'card' },
-    h('div', { class: 'row' }, ...kindBtns),
+    h('div', { class: 'row' }, ...[['modrinth', 'Modrinth'], ['curseforge', 'CurseForge']].map(([k, label]) =>
+      h('button', { class: 'btn' + (st.source === k ? ' primary' : ''), onclick: () => { st.source = k; render(); } }, label))),
+    h('div', { class: 'row', style: 'margin-top:10px' }, ...kindBtns),
     h('div', { class: 'row', style: 'margin-top:10px' }, ...(st.kind === 'mods' ? [loaderSel] : []), mcSel, q,
       h('button', { class: 'btn primary', onclick: () => { void doSearch(); } }, 'Search')),
     h('div', { class: 'row', style: 'margin-top:10px' }, h('span', { class: 'muted' }, 'Install into:'), targetSel),
     noTarget,
     st.kind === 'shaderpacks' ? h('p', { class: 'muted' }, 'Shaders also need a shader mod such as Iris in that instance.') : null,
-    h('p', { class: 'muted', style: 'margin-bottom:0' }, 'CurseForge is not included: its API needs a key issued to the app\'s author and is not set up here.')),
+    st.source === 'curseforge' ? h('p', { class: 'muted', style: 'margin-bottom:0' }, 'CurseForge needs your own API key (Settings). Some authors disable downloads from other apps; those files must be downloaded on curseforge.com. Dependencies are not installed automatically.') : null),
     h('div', { class: 'card' }, results));
   return wrap;
 }
