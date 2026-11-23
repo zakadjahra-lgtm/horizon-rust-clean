@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-alpha.1 — 2026-11-23
 
 ### Added
 - **Browse** page (sidebar): search Modrinth for mods, resource packs and shaders and install into a chosen instance. Mods need a loader chosen first (Fabric, Forge, NeoForge or Quilt) and only go to an instance with that loader. Unit-tested: the search URL rules. NOT yet tested: the page in the running app, real downloads of packs.

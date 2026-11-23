@@ -1,12 +1,12 @@
-Horizon Rust Clean v0.4.0 (test build / نسخة تجريبية)
+MClauncher v1.0.0-alpha.1 (alpha, test build / نسخة تجريبية)
 
-Install: download **MClauncher-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn.
+Install: download **MClauncher-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn. Data folder: `%APPDATA%\MClauncher` (an older HorizonRustClean folder is moved there once).
 
-New in this build — two Rust-flavoured environments in "New instance":
-- **Horizon Rust (experimental)**: a tiny native voxel game written in Rust. NOT Minecraft: no Java, no Minecraft worlds/servers/mods. Prototype (fly around generated terrain with an FPS HUD).
-- **Horizon (Rust tools)**: normal Minecraft (Java), any version, nothing injected; launcher-side performance preset + log/crash cleaners + screenshot sorter, all optional.
+New since v0.4.0:
+- Renamed to MClauncher.
+- **Browse** page: search Modrinth (and CurseForge with your own API key in Settings) for mods, resource packs and shaders; mods require choosing Fabric/Forge/NeoForge/Quilt first and install only into a matching instance.
+- "Horizon Client (beta)" is now "Rust"; "Horizon (Rust tools)" and "Horizon Rust (experimental)" are hidden from the new-instance list (old instances still work).
 
-Tested in CI (details in STATUS.md): everything from v0.3.1 (real launches of Vanilla/Fabric/Quilt/Forge/NeoForge on 1.8.9-1.21.1 on Linux, isolation, Windows installer + GUI start), plus the Rust game rendering a frame on Linux and Windows (software GPU) and Horizon (Rust tools) 1.20.1 launching.
-
-NOT tested: launching Minecraft on Windows, real-GPU performance and FPS gains, clicking through the GUI, Minecraft 26.x launch (the game started but could not create a renderer under the CI virtual display), HUD on 1.13+.
+Verified by CI (STATUS.md): launches/installs of Vanilla, Fabric, Quilt, Forge, NeoForge on Linux, instance isolation, Windows installer + GUI start, unit tests on Linux and Windows.
+NOT tested: the Browse page in the running app, real downloads of resource packs/shaders, CurseForge against the real API, the installer on a real PC and the data-folder move, launching Minecraft on Windows, real-GPU performance, Minecraft 26.x launch.
 Accounts: offline only.

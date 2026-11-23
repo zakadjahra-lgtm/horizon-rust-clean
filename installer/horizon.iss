@@ -2,7 +2,7 @@
 ; البناء: ISCC.exe /DAppExe=..\target\release\horizon-rust-clean.exe /DCliExe=..\target\release\hrc-cli.exe horizon.iss
 
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "1.0.0-alpha.1"
 #endif
 #ifndef AppExe
   #define AppExe "..\target\release\horizon-rust-clean.exe"
