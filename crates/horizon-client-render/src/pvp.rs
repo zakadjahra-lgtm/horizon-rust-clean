@@ -1857,7 +1857,9 @@ mod tests {
         }
         assert_eq!(read, p);
         assert!(read.parse_line("zoomBuiltinLevel", "99") && read.zoom.level == 10);
-        assert!(read.parse_line("zoomBuiltinKey", "c") && read.zoom.key == p.zoom.key);
+        // A value that isn't a key name is refused and keeps the bound key.
+        assert!(!read.parse_line("zoomBuiltinKey", "c"));
+        assert_eq!(read.zoom.key, p.zoom.key);
         // The legacy mod-era zoom keys are not this one's.
         assert!(!read.parse_line("zoomKey", "key.keyboard.z"));
         // Level wraps from the highest back to the lowest.
