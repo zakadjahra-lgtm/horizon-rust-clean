@@ -1256,4 +1256,27 @@ mod tests {
             assert!(!item.caption().is_empty() && !item.description().is_empty());
         }
     }
+
+    /// Each game folder (a launcher profile's `home`) keeps its own `horizon-extras.txt`: the
+    /// zoom and HUD of one profile are not the other's.
+    #[test]
+    fn two_game_folders_keep_their_own_pvp_settings() {
+        let root = std::env::temp_dir().join(format!("horizon-profiles-{}", std::process::id()));
+        let (a, b) = (root.join("a"), root.join("b"));
+        std::fs::create_dir_all(&a).unwrap();
+        std::fs::create_dir_all(&b).unwrap();
+        let mut one = Extras::default();
+        one.pvp.zoom.level = 9;
+        one.pvp.hud.fps = true;
+        one.save(&a);
+        let mut two = Extras::default();
+        two.pvp.zoom.level = 2;
+        two.save(&b);
+        let (read_a, read_b) = (Extras::load(&a), Extras::load(&b));
+        assert_eq!(read_a.pvp.zoom.level, 9);
+        assert!(read_a.pvp.hud.fps);
+        assert_eq!(read_b.pvp.zoom.level, 2);
+        assert!(!read_b.pvp.hud.fps);
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }
