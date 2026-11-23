@@ -59,7 +59,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $dir = "C:\hrc-installed"
-          Start-Process -FilePath "installer\Output\HorizonRustClean-Setup.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait
+          Start-Process -FilePath "installer\Output\MClauncher-Setup.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait
           foreach ($f in "horizon-rust-clean.exe","hrc-cli.exe","horizon-client.jar","horizon-rust-game.exe") {
             if (-not (Test-Path "$dir\$f")) { throw "MISSING after install: $f" }
             Write-Host "PASS installed $f ($((Get-Item "$dir\$f").Length) bytes)"
@@ -95,7 +95,7 @@ jobs:
             target/release/hrc-cli.exe
             target/release/horizon-client.jar
             target/release/horizon-rust-game.exe
-            installer/Output/HorizonRustClean-Setup.exe
+            installer/Output/MClauncher-Setup.exe
 
   # تشغيل حقيقي للعبة تحت شاشة افتراضية مع Horizon Client، ثم لقطة شاشة تُرفع لفرع ci-shots-<version>
   game-smoke:
@@ -157,9 +157,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" "$(find . -name HorizonRustClean-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name horizon-rust-game.exe | head -1)" CHANGELOG.md STATUS.md \
+          gh release create "$TAG" "$(find . -name MClauncher-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name horizon-rust-game.exe | head -1)" CHANGELOG.md STATUS.md \
             --repo "${{ github.repository }}" \
-            --title "Horizon Rust Clean $TAG (test build)" \
+            --title "MClauncher $TAG (test build)" \
             --prerelease \
             --notes-file RELEASE_NOTES.md
 

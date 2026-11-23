@@ -8,6 +8,7 @@
 - Browse can also search CurseForge with the player's OWN API key (Settings; or env HRC_CURSEFORGE_KEY). No key is bundled. Unit-tested: URL, reply parsing, file choice, CDN-only downloads. NOT tested against the real API (the build environment cannot reach api.curseforge.com). Dependencies are not installed; files whose author disabled third-party downloads are refused with a message.
 
 ### Changed
+- The launcher is named **MClauncher**: window, installer (`MClauncher-Setup.exe`), shortcuts. Its data folder is `MClauncher` in the user's data folder (Windows: `%APPDATA%\MClauncher`); an existing HorizonRustClean data folder is moved there once, never overwriting. The program file is still `horizon-rust-clean.exe`. Migration is unit-tested; the installer and the move on a real Windows profile are not yet tested.
 - "Horizon Client (beta)" is now called "Rust" in the UI.
 - "Horizon (Rust tools)" and "Horizon Rust (experimental)" no longer appear in the create-instance list or the tabs (existing instances of those kinds still work).
 

@@ -1,4 +1,4 @@
-; Horizon Rust Clean — Inno Setup script
+; MClauncher — Inno Setup script
 ; البناء: ISCC.exe /DAppExe=..\target\release\horizon-rust-clean.exe /DCliExe=..\target\release\hrc-cli.exe horizon.iss
 
 #ifndef AppVersion
@@ -19,14 +19,14 @@
 
 [Setup]
 AppId={{6B1C5E52-7D3A-4C8E-9F0B-2A4D8E1C7F31}
-AppName=Horizon Rust Clean
+AppName=MClauncher
 AppVersion={#AppVersion}
-AppPublisher=Horizon Rust Clean
-DefaultDirName={autopf}\Horizon Rust Clean
-DefaultGroupName=Horizon Rust Clean
+AppPublisher=MClauncher
+DefaultDirName={autopf}\MClauncher
+DefaultGroupName=MClauncher
 DisableProgramGroupPage=yes
 OutputDir=Output
-OutputBaseFilename=HorizonRustClean-Setup
+OutputBaseFilename=MClauncher-Setup
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -35,7 +35,7 @@ PrivilegesRequiredOverridesAllowed=dialog
 WizardStyle=modern
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\horizon-rust-clean.exe
-UninstallDisplayName=Horizon Rust Clean
+UninstallDisplayName=MClauncher
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"
@@ -51,11 +51,11 @@ Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\STATUS.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\Horizon Rust Clean"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"
-Name: "{autodesktop}\Horizon Rust Clean"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autoprograms}\MClauncher"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\MClauncher"; Filename: "{app}\horizon-rust-clean.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\horizon-rust-clean.exe"; Description: "Launch Horizon Rust Clean"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\horizon-rust-clean.exe"; Description: "Launch MClauncher"; Flags: nowait postinstall skipifsilent
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}'))

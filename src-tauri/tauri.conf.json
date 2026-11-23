@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Horizon Rust Clean",
+  "productName": "MClauncher",
   "version": "0.4.0",
   "identifier": "io.horizon.rustclean",
   "build": {
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Horizon Rust Clean",
+        "title": "MClauncher",
         "width": 1100,
         "height": 700,
         "minWidth": 900,

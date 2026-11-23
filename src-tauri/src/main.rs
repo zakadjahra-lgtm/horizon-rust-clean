@@ -146,7 +146,7 @@ async fn do_install(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Stri
     let inst = instance::load(&st.data, id).map_err(es)?;
     if inst.loader == Loader::Rust {
         // لعبة أصلية: لا تنزيل من Mojang ولا Java. نتحقق فقط أنها موجودة ونجهّز مجلد الـ instance.
-        rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall Horizon Rust Clean)")?;
+        rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall MClauncher)")?;
         std::fs::create_dir_all(instance::game_dir(&st.data, id)).map_err(es)?;
         instance::set_installed(&st.data, id, true).map_err(es)?;
         return Ok(());
@@ -219,7 +219,7 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
     }
     let s = settings::load(&st.data);
     if inst.loader == Loader::Rust {
-        let exe = rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall Horizon Rust Clean)")?;
+        let exe = rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall MClauncher)")?;
         let gd = instance::game_dir(&st.data, id);
         std::fs::create_dir_all(&gd).map_err(es)?;
         let cmd = LaunchCommand {
@@ -562,5 +562,5 @@ fn main() {
             save_client_profile,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Horizon Rust Clean");
+        .expect("error while running MClauncher");
 }

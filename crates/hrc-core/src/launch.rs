@@ -175,7 +175,7 @@ pub fn build_command(ctx: &LaunchContext) -> Result<LaunchCommand> {
         ("library_directory", ctx.shared_dir.join("libraries").to_string_lossy().into_owned()),
         ("classpath_separator", ctx.os.classpath_separator().into()),
         ("classpath", cp),
-        ("launcher_name", "HorizonRustClean".into()),
+        ("launcher_name", "MClauncher".into()),
         ("launcher_version", env!("CARGO_PKG_VERSION").into()),
     ];
 

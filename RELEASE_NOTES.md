@@ -1,6 +1,6 @@
 Horizon Rust Clean v0.4.0 (test build / نسخة تجريبية)
 
-Install: download **HorizonRustClean-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn.
+Install: download **MClauncher-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn.
 
 New in this build — two Rust-flavoured environments in "New instance":
 - **Horizon Rust (experimental)**: a tiny native voxel game written in Rust. NOT Minecraft: no Java, no Minecraft worlds/servers/mods. Prototype (fly around generated terrain with an FPS HUD).

@@ -176,7 +176,7 @@ function renderHome(): HTMLElement {
   const inst = current();
   if (!inst) {
     wrap.append(h('div', { class: 'card center' },
-      h('h2', {}, 'Welcome to Horizon Rust Clean'),
+      h('h2', {}, 'Welcome to MClauncher'),
       h('p', { class: 'muted' }, 'Create an instance (a Minecraft version with its own folder and settings) to get started.'),
       h('button', { class: 'btn primary', onclick: () => go('instances') }, 'Create instance')));
     return wrap;
