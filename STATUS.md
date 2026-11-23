@@ -1,4 +1,4 @@
-# MClauncher — STATUS (v1.0.0-alpha.1)
+# MClauncher — STATUS (v1.0.0)
 
 > Rule of this file: nothing is marked as working unless a test actually ran it. "Verified" means a CI job did it on the stated platform; everything else is listed under "Not verified".
 

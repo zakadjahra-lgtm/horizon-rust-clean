@@ -1,4 +1,4 @@
-MClauncher v1.0.0-alpha.1 (alpha, test build / نسخة تجريبية)
+MClauncher v1.0.0 (test build / نسخة تجريبية)
 
 Install: download **MClauncher-Setup.exe** (Windows x64). Not code-signed, so SmartScreen may warn. Data folder: `%APPDATA%\MClauncher` (an older HorizonRustClean folder is moved there once).
 
