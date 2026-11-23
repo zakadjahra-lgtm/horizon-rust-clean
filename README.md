@@ -1,3 +1,7 @@
+> **Horizon Rust Clean** is a development fork of [Horizon Offline Launcher](https://github.com/gerdaroot/Horizon-Offline-Launcher), itself a fork of
+> [Horizon](https://github.com/horizon-rust/horizon) (MIT). It keeps all of their code, history, design and licence notices and adds a "Clean" client layer on
+> top. Plan, honest scope and status: [docs/rust-clean/PLAN.md](docs/rust-clean/PLAN.md). Everything below is the unmodified upstream README.
+
 <h1 align="center">Horizon Offline Launcher</h1>
 
 <p align="center">

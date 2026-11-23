@@ -1,0 +1,44 @@
+name: rust-clean
+# Compiles and tests the Horizon Rust Clean branch. The upstream release workflows (launcher.yml, game.yml) stay as they were
+# and are not triggered by this branch.
+on:
+  push:
+    branches: [rust-clean]
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  HORIZON_TELEMETRY_URL: "off"
+  CARGO_TERM_COLOR: never
+
+jobs:
+  launcher-check:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: launcher
+      - run: bash "$GITHUB_WORKSPACE/tools/ci/apt_install.sh" libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev libvulkan-dev libasound2-dev
+      - run: cargo check --locked
+
+  game-check:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: bash "$GITHUB_WORKSPACE/tools/ci/apt_install.sh" libasound2-dev libudev-dev
+      - name: Check the game crate
+        run: cargo check --locked -p horizon-client
+      - name: Unit tests of the HUD / extras logic
+        run: cargo test --locked -p horizon-client-render --lib extras
