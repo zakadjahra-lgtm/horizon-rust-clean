@@ -1358,6 +1358,7 @@ enum Act {
     ToggleMod(usize),
     /// PvP & HUD's PvP preset (`pvp::apply_preset`).
     PvpPreset,
+    CleanPreset,
     /// PvP & HUD's Edit HUD button.
     HudEditor,
     /// The installed native mod's settings page.
@@ -1875,6 +1876,7 @@ fn tooltip_text(s: &Settings, wd: &Widget) -> Option<Text> {
         Act::Push(Page::Language) => Some("options.language.tooltip".into()),
         Act::Push(Page::Accessibility) => Some("options.accessibility.tooltip".into()),
         Act::PvpPreset => Some("horizon.pvp.preset.tooltip".into()),
+        Act::CleanPreset => Some("horizon.pvp.clean_preset.tooltip".into()),
         Act::HudEditor => Some("horizon.pvp.editor.tooltip".into()),
         _ => None,
     };
@@ -2666,7 +2668,17 @@ impl OptionsUi {
                 // The editor moves what the game shows: only from a world.
                 let edit = button(0.0, 0.0, 150.0, tr("horizon.pvp.editor"), Act::HudEditor);
                 let edit = if self.in_world { edit } else { inactive(edit) };
-                let mut rows = vec![Row::Buttons(preset, Some(edit))];
+                let clean = button(
+                    0.0,
+                    0.0,
+                    150.0,
+                    tr("horizon.pvp.clean_preset"),
+                    Act::CleanPreset,
+                );
+                let mut rows = vec![
+                    Row::Buttons(preset, Some(edit)),
+                    Row::Buttons(clean, None),
+                ];
                 let mut section = Vec::new();
                 let flush = |rows: &mut Vec<Row>, section: &mut Vec<crate::extras::Item>| {
                     let mut half = None;
@@ -4281,6 +4293,10 @@ impl OptionsUi {
                             crate::pvp::apply_preset(s);
                             events.push(Event::Changed);
                         }
+                        Act::CleanPreset => {
+                            crate::pvp::apply_clean_preset(s);
+                            events.push(Event::Changed);
+                        }
                         Act::HudEditor => events.push(Event::HudEditor),
                         Act::AccessibilityHelp => events.push(Event::AccessibilityHelp),
                         Act::Credits => events.push(Event::Credits),
@@ -5217,6 +5233,10 @@ impl OptionsUi {
                         }
                         Act::PvpPreset => {
                             crate::pvp::apply_preset(s);
+                            events.push(Event::Changed);
+                        }
+                        Act::CleanPreset => {
+                            crate::pvp::apply_clean_preset(s);
                             events.push(Event::Changed);
                         }
                         Act::HudEditor => events.push(Event::HudEditor),
@@ -7495,6 +7515,7 @@ mod tests {
                         Act::Cycle(opt) => format!("{opt:?}"),
                         Act::Extra(e) => format!("extra:{e:?}"),
                         Act::PvpPreset => "pvp-preset".to_owned(),
+                        Act::CleanPreset => "pvp-clean-preset".to_owned(),
                         Act::Push(to) => {
                             ways_in
                                 .entry(format!("{to:?}"))

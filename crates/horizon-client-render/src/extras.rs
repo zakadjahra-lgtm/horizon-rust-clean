@@ -477,6 +477,7 @@ impl Extras {
         match name {
             SORT_KEY => self.sort_key = value,
             crate::pvp::HUD_EDITOR_KEY => self.pvp.editor_key = value,
+            crate::pvp::ZOOM_KEY => self.pvp.zoom.key = value,
             _ => return false,
         }
         true
@@ -1007,6 +1008,7 @@ impl Item {
         match self {
             Item::SortKey => Some(SORT_KEY),
             Item::Pvp(crate::pvp::Opt::HudEditorKey) => Some(crate::pvp::HUD_EDITOR_KEY),
+            Item::Pvp(crate::pvp::Opt::ZoomKey) => Some(crate::pvp::ZOOM_KEY),
             _ => None,
         }
     }

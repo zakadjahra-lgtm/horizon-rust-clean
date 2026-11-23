@@ -41,4 +41,4 @@ jobs:
       - name: Check the game crate
         run: cargo check --locked -p horizon-client
       - name: Unit tests of the HUD / extras logic
-        run: cargo test --locked -p horizon-client-render --lib extras
+        run: cargo test --locked -p horizon-client-render --lib -- extras pvp zoom options_ui

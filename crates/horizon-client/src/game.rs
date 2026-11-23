@@ -17776,7 +17776,8 @@ impl Game<'_> {
                     // MouseHandler.onScroll: the hotbar (or the spectator
                     // menu) takes the wheel only when no screen is open; a
                     // book, lectern, sign or prompt drawn over gameplay is one.
-                    if self.hotbar_takes_wheel()
+                    if !self.zoom_wheel(d)
+                        && self.hotbar_takes_wheel()
                         && !self.native_wheel_event(d)
                         && let Some((wheel, (horizontal_steps, vertical_steps))) = self
                             .mouse

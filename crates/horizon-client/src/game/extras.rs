@@ -8,6 +8,7 @@ use horizon_client::{
     extras_hud::{self, Corners},
     hud::{HudBatch, MINIMAP_SPRITE},
     minimap::{self, Layer, Minimap, View},
+    zoom,
     multiplayer,
     reconnect::{Retry, Tracker},
     title::Mode,
@@ -26,6 +27,9 @@ pub(super) struct ExtrasState {
     minimap_dim: Option<Dim>,
     /// Auto-reconnect's attempts at the current server.
     reconnect: Tracker,
+    /// The built-in zoom's factor after the wheel changed it; forgotten
+    /// when the zoom key is let go.
+    zoom_level: Option<u8>,
 }
 /// CPU time the minimap's tiles may take per frame.
 const MINIMAP_BUDGET: Duration = Duration::from_micros(300);
@@ -56,6 +60,9 @@ impl Game<'_> {
         let playing = self.screen == Screen::Playing && self.title.is_none() && focused;
         if !playing {
             self.extras.mouse = [false; 2];
+        }
+        if self.builtin_zoom_held().is_none() {
+            self.extras.zoom_level = None;
         }
         self.update_minimap();
         // For mods (`render.frame-stats`, `native_frame_rate`).
@@ -209,12 +216,48 @@ impl Game<'_> {
             rgba: self.extras.minimap.image.clone(),
         });
     }
-    /// A mod's zoom in effect (`native_zoom`): (factor, smooth, turning
-    /// scale); none is 1.
+    /// The zoom in effect: a mod's (`native_zoom`), else Horizon's built-in
+    /// one while its key is held: (factor, smooth, turning scale); none is 1.
     fn zoom_now(&self) -> (f32, bool, f64) {
-        self.native_zoom_now().map_or((1.0, true, 1.0), |z| {
-            (z.factor, z.smooth, f64::from(z.turn))
-        })
+        if let Some(z) = self.native_zoom_now() {
+            return (z.factor, z.smooth, f64::from(z.turn));
+        }
+        match self.builtin_zoom_held() {
+            Some(factor) => {
+                let z = &self.settings.extras.pvp.zoom;
+                (factor, z.smooth, zoom::turn_scale(factor, z.sensitivity))
+            }
+            None => (1.0, true, 1.0),
+        }
+    }
+    /// The built-in zoom's factor while it is on, no screen is open and its
+    /// key is held.
+    fn builtin_zoom_held(&self) -> Option<f32> {
+        let z = &self.settings.extras.pvp.zoom;
+        if !z.on || !self.hotbar_takes_wheel() || self.title.is_some() {
+            return None;
+        }
+        let code = horizon_client::keybinds::key_code(&z.key)?;
+        if !self.physical_keys.contains(&code) {
+            return None;
+        }
+        Some(zoom::factor(self.extras.zoom_level.unwrap_or(z.level)))
+    }
+    /// The wheel while the built-in zoom is held changes its factor; true
+    /// when it took the notch (a mod's zoom leaves the wheel alone).
+    pub(super) fn zoom_wheel(&mut self, d: f32) -> bool {
+        if d == 0.0
+            || !self.settings.extras.pvp.zoom.scroll
+            || self.native_zoom_now().is_some()
+        {
+            return false;
+        }
+        let Some(factor) = self.builtin_zoom_held() else {
+            return false;
+        };
+        let notches = if d > 0.0 { 1 } else { -1 };
+        self.extras.zoom_level = Some(zoom::wheel(factor as u8, notches));
+        true
     }
     /// The field-of-view modifier target, divided by a smooth zoom.
     pub(super) fn zoomed_fov_target(&self, vanilla: f32) -> f32 {

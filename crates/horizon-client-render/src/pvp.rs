@@ -795,7 +795,37 @@ pub struct Pvp {
     /// The key that opens the HUD editor from the game (unbound at first).
     pub editor_key: String,
     pub combat: Combat,
+    pub zoom: Zoom,
 }
+/// Horizon's built-in zoom: hold the key, scroll to adjust. Off until turned
+/// on; a native mod's zoom (`native_zoom`) still wins while it zooms.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Zoom {
+    pub on: bool,
+    pub key: String,
+    /// The factor the key starts at (`zoom::LEVELS`).
+    pub level: u8,
+    /// Ease in and out like the spyglass, instead of cutting.
+    pub smooth: bool,
+    /// Divide mouse turning by the zoom.
+    pub sensitivity: bool,
+    /// The wheel changes the factor while the key is held.
+    pub scroll: bool,
+}
+impl Default for Zoom {
+    fn default() -> Self {
+        Self {
+            on: false,
+            key: "key.keyboard.c".into(),
+            level: 4,
+            smooth: true,
+            sensitivity: true,
+            scroll: true,
+        }
+    }
+}
+/// The zoom key's name for the controls (`Extras::set_key`).
+pub const ZOOM_KEY: &str = "horizon.zoom";
 /// The HUD editor key's name for the controls (`Extras::set_key`).
 pub const HUD_EDITOR_KEY: &str = "horizon.hud_editor";
 impl Default for Pvp {
@@ -810,6 +840,7 @@ impl Default for Pvp {
             layout: crate::pvp_hud::Layout::default(),
             editor_key: "key.keyboard.unknown".into(),
             combat: Combat::default(),
+            zoom: Zoom::default(),
         }
     }
 }
@@ -874,6 +905,14 @@ impl Pvp {
             "hudShadow" => u.shadow = flag(value, u.shadow),
             "hudPlace" => self.layout.parse(value),
             "hudEditorKey" if value.starts_with("key.") => self.editor_key = value.to_owned(),
+            "zoomBuiltin" => self.zoom.on = flag(value, self.zoom.on),
+            "zoomBuiltinKey" if value.starts_with("key.") => self.zoom.key = value.to_owned(),
+            "zoomBuiltinLevel" => {
+                self.zoom.level = num(value, crate::zoom::LEVELS, self.zoom.level)
+            }
+            "zoomBuiltinSmooth" => self.zoom.smooth = flag(value, self.zoom.smooth),
+            "zoomBuiltinTurn" => self.zoom.sensitivity = flag(value, self.zoom.sensitivity),
+            "zoomBuiltinScroll" => self.zoom.scroll = flag(value, self.zoom.scroll),
             "hudPing" => u.ping = flag(value, u.ping),
             "hudPingCorner" => u.ping_corner = Corner::parse(value, u.ping_corner),
             "hudCoords" => u.coords = flag(value, u.coords),
@@ -1018,6 +1057,12 @@ impl Pvp {
         );
         self.layout.serialize(out);
         let _ = writeln!(out, "hudEditorKey:{}", self.editor_key);
+        let z = &self.zoom;
+        let _ = write!(
+            out,
+            "zoomBuiltin:{}\nzoomBuiltinKey:{}\nzoomBuiltinLevel:{}\nzoomBuiltinSmooth:{}\nzoomBuiltinTurn:{}\nzoomBuiltinScroll:{}\n",
+            z.on, z.key, z.level, z.smooth, z.sensitivity, z.scroll,
+        );
         let t = &self.tweaks;
         let _ = write!(
             out,
@@ -1052,6 +1097,37 @@ impl Pvp {
     }
 }
 
+/// Background opacity the Clean preset gives its widget boxes, in percent.
+const CLEAN_OPACITY: u8 = 40;
+/// The Clean HUD preset, laid out as Lunar and Badlion do: FPS, CPS and ping stacked at the top
+/// left, keystrokes at the bottom left, armour status and the held item's count at the bottom
+/// right, effects at the top right, each in a translucent box with shadowed white text. It also
+/// turns on the built-in zoom and toggle sprint. Widget places go back to their corners (the HUD
+/// editor's moves are dropped); the crosshair, tweaks, chat and combat options stay as they are.
+pub fn apply_clean_preset(s: &mut crate::settings::Settings) {
+    let p = &mut s.extras.pvp;
+    let u = &mut p.hud;
+    for (on, corner) in [
+        (&mut u.fps, (&mut u.fps_corner, Corner::TopLeft)),
+        (&mut u.cps, (&mut u.cps_corner, Corner::TopLeft)),
+        (&mut u.ping, (&mut u.ping_corner, Corner::TopLeft)),
+        (&mut u.keys, (&mut u.keys_corner, Corner::BottomLeft)),
+        (&mut u.armour, (&mut u.armour_corner, Corner::BottomRight)),
+        (&mut u.held, (&mut u.held_corner, Corner::BottomRight)),
+        (&mut u.effects, (&mut u.effects_corner, Corner::TopRight)),
+    ] {
+        *on = true;
+        *corner.0 = corner.1;
+    }
+    u.armour_percent = false;
+    u.background = true;
+    u.opacity = CLEAN_OPACITY;
+    u.text = Colour::White;
+    u.shadow = true;
+    p.layout = crate::pvp_hud::Layout::default();
+    p.zoom.on = true;
+    s.toggle_sprint = true;
+}
 /// The official mods the PvP preset turns on when they are installed: the FPS counter and the
 /// keystrokes with clicks per second.
 pub const PRESET_MODS: [&str; 2] = ["fps_overlay", "keystrokes"];
@@ -1163,6 +1239,16 @@ opts! {
     HudShadow, "hud_shadow", "Text shadow", "A shadow under the widgets' text, as vanilla's HUD text has.";
     HudEditorKey, "hud_editor_key", "HUD editor key",
         "Opens the HUD editor from the game. Click, then press a key; Escape unbinds it.";
+    ZoomOn, "zoom_on", "Zoom",
+        "Hold the zoom key to look closer, like a spyglass. A zoom mod you install takes over while it zooms.";
+    ZoomKey, "zoom_key", "Zoom key",
+        "Hold it to zoom. Click, then press a key; Escape unbinds it. Mouse buttons are not supported here.";
+    ZoomLevel, "zoom_level", "Zoom level", "How many times closer the key brings the view.";
+    ZoomSmooth, "zoom_smooth", "Smooth zoom", "Eases in and out as the spyglass does, instead of cutting.";
+    ZoomSensitivity, "zoom_sensitivity", "Slower turning",
+        "Divides mouse turning by the zoom, so a close view does not whip across the screen.";
+    ZoomScroll, "zoom_scroll", "Wheel zoom",
+        "While the key is held, the wheel zooms further in or out instead of changing the hotbar slot.";
     NumericEnchants, "numeric_enchants", "Enchantment levels as numbers",
         "Tooltips and the enchanting table show Sharpness 5 instead of Sharpness V.";
     FireLower, "fire_lower", "Lower fire",
@@ -1270,6 +1356,8 @@ pub fn rows() -> Vec<Result<Opt, &'static str>> {
     rows.push(Ok(GlintColour));
     rows.push(Err("horizon.pvp.header.visual"));
     rows.extend([FireLower, ShieldSize, TotemSize, ClearWater, ClearLava].map(Ok));
+    rows.push(Err("horizon.pvp.header.zoom"));
+    rows.extend([ZoomOn, ZoomKey, ZoomLevel, ZoomSmooth, ZoomSensitivity, ZoomScroll].map(Ok));
     rows.push(Err("horizon.pvp.header.view"));
     rows.extend([ViewTime, ViewWeather].map(Ok));
     rows.push(Err("horizon.pvp.header.chat"));
@@ -1298,6 +1386,8 @@ impl Opt {
             HudSpeedCorner => Some(HudSpeed),
             FireLower | ShieldSize | TotemSize | GlintColour | ClearWater | ClearLava => None,
             ViewTime | ViewWeather => None,
+            ZoomOn => None,
+            ZoomKey | ZoomLevel | ZoomSmooth | ZoomSensitivity | ZoomScroll => Some(ZoomOn),
             ChatTimestamps | ChatCompact | ChatCopy | ChatSearch => None,
             CombatFeel | CombatIndicator | CombatSounds | CombatRules => None,
             HudPingCorner => Some(HudPing),
@@ -1334,6 +1424,10 @@ impl Opt {
             Opt::HudClock => p.hud.clock,
             Opt::HudReach => p.hud.reach,
             Opt::HudSpeed => p.hud.speed,
+            Opt::ZoomOn => p.zoom.on,
+            Opt::ZoomSmooth => p.zoom.smooth,
+            Opt::ZoomSensitivity => p.zoom.sensitivity,
+            Opt::ZoomScroll => p.zoom.scroll,
             Opt::NumericEnchants => p.tweaks.numeric_enchants,
             Opt::ClearWater => p.tweaks.clear_water,
             Opt::ClearLava => p.tweaks.clear_lava,
@@ -1385,6 +1479,8 @@ impl Opt {
             Opt::HudOpacity => format!("{}%", p.hud.opacity),
             Opt::HudTextColour => p.hud.text.label(),
             Opt::HudEditorKey => crate::keybinds::display_name(&p.editor_key).plain(),
+            Opt::ZoomKey => crate::keybinds::display_name(&p.zoom.key).plain(),
+            Opt::ZoomLevel => format!("{}x", p.zoom.level),
             Opt::FireLower => match p.tweaks.fire_lower {
                 0 => crate::lang::get_or("Off", "Off"),
                 v => format!("{v}%"),
@@ -1460,7 +1556,14 @@ impl Opt {
             Opt::HudTextColour => u.text = u.text.step_solid(back),
             Opt::HudShadow => u.shadow = !u.shadow,
             // Bound through the controls' key capture (`Item::key_name`).
-            Opt::HudEditorKey => {}
+            Opt::HudEditorKey | Opt::ZoomKey => {}
+            Opt::ZoomOn => p.zoom.on = !p.zoom.on,
+            Opt::ZoomLevel => {
+                p.zoom.level = step_num(p.zoom.level, crate::zoom::LEVELS.0, crate::zoom::LEVELS.1, back)
+            }
+            Opt::ZoomSmooth => p.zoom.smooth = !p.zoom.smooth,
+            Opt::ZoomSensitivity => p.zoom.sensitivity = !p.zoom.sensitivity,
+            Opt::ZoomScroll => p.zoom.scroll = !p.zoom.scroll,
             Opt::HudPing => u.ping = !u.ping,
             Opt::HudPingCorner => u.ping_corner = corner(u.ping_corner),
             Opt::HudCoords => u.coords = !u.coords,
@@ -1705,6 +1808,62 @@ mod tests {
         let mut fresh = crate::settings::Settings::default();
         apply_preset(&mut fresh);
         assert_eq!(fresh.extras.pvp.tweaks.fire_lower, PRESET_FIRE_LOWER);
+    }
+
+    #[test]
+    fn the_clean_preset_lays_the_hud_out_and_keeps_the_rest() {
+        let mut s = crate::settings::Settings::default();
+        s.extras.pvp.crosshair.colour = Colour::Green;
+        s.extras.pvp.tweaks.fire_lower = 60;
+        s.extras.pvp.hud.clock = true;
+        s.extras.pvp.hud.fps_corner = Corner::BottomRight;
+        apply_clean_preset(&mut s);
+        let p = &s.extras.pvp;
+        let u = &p.hud;
+        assert!(u.fps && u.cps && u.keys && u.armour && u.held && u.effects && u.ping);
+        assert_eq!(u.fps_corner, Corner::TopLeft);
+        assert_eq!(u.cps_corner, Corner::TopLeft);
+        assert_eq!(u.keys_corner, Corner::BottomLeft);
+        assert_eq!(u.armour_corner, Corner::BottomRight);
+        assert!(u.background && u.shadow && u.opacity == CLEAN_OPACITY);
+        assert!(p.zoom.on && s.toggle_sprint);
+        // Not touched: the crosshair, tweaks and widgets the preset doesn't place.
+        assert!(!p.crosshair.custom);
+        assert_eq!(p.crosshair.colour, Colour::Green);
+        assert_eq!(p.tweaks.fire_lower, 60);
+        assert!(u.clock);
+        // Applying it twice changes nothing more.
+        let once = s.extras.pvp.clone();
+        apply_clean_preset(&mut s);
+        assert_eq!(s.extras.pvp, once);
+    }
+
+    #[test]
+    fn the_zoom_settings_round_trip_and_stay_in_range() {
+        let mut p = Pvp::default();
+        assert!(!p.zoom.on, "off until turned on");
+        Opt::ZoomOn.cycle(&mut p, false);
+        Opt::ZoomLevel.cycle(&mut p, false);
+        Opt::ZoomSmooth.cycle(&mut p, false);
+        Opt::ZoomScroll.cycle(&mut p, false);
+        assert!(p.zoom.on && p.zoom.level == 5 && !p.zoom.smooth && !p.zoom.scroll);
+        assert_eq!(Opt::ZoomLevel.value(&p).as_deref(), Some("5x"));
+        let mut text = String::new();
+        p.serialize(&mut text);
+        let mut read = Pvp::default();
+        for line in text.lines() {
+            let (k, v) = line.split_once(':').unwrap();
+            assert!(read.parse_line(k, v), "{k}");
+        }
+        assert_eq!(read, p);
+        assert!(read.parse_line("zoomBuiltinLevel", "99") && read.zoom.level == 10);
+        assert!(read.parse_line("zoomBuiltinKey", "c") && read.zoom.key == p.zoom.key);
+        // The legacy mod-era zoom keys are not this one's.
+        assert!(!read.parse_line("zoomKey", "key.keyboard.z"));
+        // Level wraps from the highest back to the lowest.
+        p.zoom.level = 10;
+        Opt::ZoomLevel.cycle(&mut p, false);
+        assert_eq!(p.zoom.level, 2);
     }
 
     #[test]

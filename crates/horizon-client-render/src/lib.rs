@@ -133,6 +133,7 @@ pub mod widgets;
 pub mod world;
 pub mod worldborder;
 pub mod zip;
+pub mod zoom;
 pub use horizon_client_core::Result;
 pub use horizon_client_core::block_entity_nbt;
 pub use horizon_client_core::bossbar;
