@@ -16,6 +16,8 @@ fn every_accent_reads_as_well_as_the_violet() {
         DAWN.blocks(),
         NORD_DARK.blocks(),
         NORD_LIGHT.blocks(),
+        CLEAN_DARK.blocks(),
+        CLEAN_LIGHT.blocks(),
     ] {
         for accent in Accent::ALL
             .into_iter()
@@ -67,10 +69,10 @@ fn colours_go_to_hsl_and_back() {
 }
 
 #[test]
-fn nord_text_reads_over_its_sky() {
+fn palette_text_reads_over_its_sky() {
     use horizon_theme::night::{over, UNCARDED_STOPS};
 
-    for p in [NORD_DARK, NORD_LIGHT] {
+    for p in [NORD_DARK, NORD_LIGHT, CLEAN_DARK, CLEAN_LIGHT] {
         let look = if p.dark { "dark" } else { "light" };
         let texts = [
             ("ink", p.ink),

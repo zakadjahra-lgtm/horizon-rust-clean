@@ -117,6 +117,82 @@ pub const NORD_LIGHT: Night = Night {
     },
 };
 
+/// Clean: flat graphite (or paper) surfaces, no sky art, one blue accent. The look of a PvP
+/// client's menus (Lunar, Badlion): quiet, dense and readable. Colours checked for contrast by
+/// `clean_text_reads_over_its_sky` and `every_accent_reads_as_well_as_the_violet`.
+pub const CLEAN_DARK: Night = Night {
+    sky: [0x111214, 0x111214, 0x131518, 0x15171b, 0x181a1e, 0x1b1d22],
+    page: 0x111214,
+    side: 0x0d0e10,
+    card: 0x1a1c20,
+    card_alpha: 0.92,
+    card_hi: 0x23262b,
+    card_hi_alpha: 0.95,
+    stroke: 0xffffff,
+    stroke_alpha: 0.08,
+    rule_alpha: 0.08,
+    ink: 0xf4f5f7,
+    ink_soft: 0xd5d8dd,
+    muted: 0xa3a9b2,
+    accent: 0x1f6fe0,
+    accent_hi: 0x5aa9ff,
+    on_accent: 0xffffff,
+    success: 0x6fd08c,
+    warn: 0xf0c15a,
+    danger: 0xff8a8f,
+    dark: true,
+    art: SkyArt {
+        sun: [0x23262b, 0x1f6fe0, 0x1a1c20],
+        far: 0x181a1e,
+        near: 0x0d0e10,
+        cloud: [0x1a1c20, 0x1f2227, 0x23262b],
+        lit: [0x2b2f35, 0x343941, 0x3f4650],
+        shade: 0x0d0e10,
+        star: 0xf4f5f7,
+    },
+};
+
+pub const CLEAN_LIGHT: Night = Night {
+    sky: [0xf3f4f6, 0xf3f4f6, 0xeff1f3, 0xeceef1, 0xe8eaee, 0xe3e6ea],
+    page: 0xf3f4f6,
+    side: 0xe9ebee,
+    card: 0xffffff,
+    card_alpha: 0.92,
+    card_hi: 0xffffff,
+    card_hi_alpha: 0.96,
+    stroke: 0x1c1f24,
+    stroke_alpha: 0.12,
+    rule_alpha: 0.09,
+    ink: 0x15181d,
+    ink_soft: 0x2e343c,
+    muted: 0x555d68,
+    accent: 0x1a5fc4,
+    accent_hi: 0x1a5fc4,
+    on_accent: 0xffffff,
+    success: 0x1f6b3a,
+    warn: 0x7a5300,
+    danger: 0xb3262f,
+    dark: false,
+    art: SkyArt {
+        sun: [0xffffff, 0xf3f4f6, 0xe3e6ea],
+        far: 0xe3e6ea,
+        near: 0xd5d9de,
+        cloud: [0xffffff, 0xf3f4f6, 0xeceef1],
+        lit: [0xffffff; 3],
+        shade: 0xd5d9de,
+        star: 0xffffff,
+    },
+};
+
+/// Clean: the launcher in the PvP clients' flat graphite look, with a blue accent.
+pub const CLEAN: Theme = Theme {
+    id: "clean",
+    name: "Clean",
+    sky: CLEAN_DARK.sky,
+    accent: ThemeAccent::Colour(0x1f6fe0),
+    palette: Some((&CLEAN_DARK, &CLEAN_LIGHT)),
+};
+
 /// First Light: the sky just before sunrise, with a harbour skyline.
 pub const FIRST_LIGHT: Theme = Theme {
     id: "first_light",
@@ -136,7 +212,7 @@ pub const NORD: Theme = Theme {
 };
 
 /// The launcher themes past Horizon's own sky.
-pub const THEMES: [Theme; 2] = [FIRST_LIGHT, NORD];
+pub const THEMES: [Theme; 3] = [FIRST_LIGHT, NORD, CLEAN];
 
 /// The theme named `id` (`Settings::theme`); None for Horizon's own sky or a name this launcher
 /// doesn't know.

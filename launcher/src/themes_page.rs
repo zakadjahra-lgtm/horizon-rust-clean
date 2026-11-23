@@ -49,7 +49,7 @@ impl Launcher {
         crate::theme::from_settings(&self.settings, window.appearance())
     }
 
-    /// Settings' launcher theme: Horizon's own sky, First Light or Nord, free for everyone.
+    /// Settings' launcher theme: Horizon's own sky, First Light, Nord or Clean, free for everyone.
     /// Picking one brings its accent too; the accent row can change it after.
     pub(super) fn launcher_theme_row(&mut self, cx: &mut Context<Self>) -> Div {
         let t = self.theme;

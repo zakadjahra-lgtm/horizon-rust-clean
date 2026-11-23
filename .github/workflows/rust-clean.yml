@@ -29,6 +29,8 @@ jobs:
           workspaces: launcher
       - run: bash "$GITHUB_WORKSPACE/tools/ci/apt_install.sh" libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev libvulkan-dev libasound2-dev
       - run: cargo check --locked
+      - name: Theme tests (palettes, contrast, Clean theme)
+        run: cargo test --locked theme
 
   game-check:
     runs-on: ubuntu-22.04

@@ -274,6 +274,26 @@ mod tests {
         assert_eq!(theme.accent_choice.rgb(), 0x88c0d0);
     }
 
+    /// Clean is a palette theme too: solid, with its own graphite page and blue accent, and a
+    /// light appearance with its paper page.
+    #[test]
+    fn the_clean_theme_wears_its_graphite_and_paper() {
+        let mut settings = Settings {
+            appearance: Appearance::Dark,
+            accent: Accent::from_rgb(0x1f6fe0),
+            theme: Some("clean".into()),
+            ..Settings::default()
+        };
+        let dark = from_settings(&settings, WindowAppearance::Dark);
+        assert!(!dark.glass && dark.dark);
+        assert_eq!(dark.night.page, 0x111214);
+        assert_eq!(dark.night.accent, 0x1f6fe0);
+        settings.appearance = Appearance::Light;
+        let light = from_settings(&settings, WindowAppearance::Light);
+        assert!(!light.glass && !light.dark);
+        assert_eq!(light.night.page, 0xf3f4f6);
+    }
+
     /// `top` at `alpha` over `under`, as the GPU blends them.
     fn blend(top: u32, under: u32, alpha: f32) -> u32 {
         let channel = |shift: u32| {
