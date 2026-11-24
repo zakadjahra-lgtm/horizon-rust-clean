@@ -284,7 +284,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends xvfb x11-utils imagemagick \
-            libxxf86vm1 libxcursor1 libxrandr2 libxi6 libxext6 libxrender1 libxtst6 libgl1 libgl1-mesa-dri libglx-mesa0 \
+            libxxf86vm1 libxcursor1 libxrandr2 libxi6 libxext6 libxrender1 libxtst6 libgl1 libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers libvulkan1 vulkan-tools libx11-xcb1 libxkbcommon-x11-0 \
             libglu1-mesa libopenal1 libfontconfig1 libfreetype6 fonts-dejavu-core xserver-xorg-core xserver-xorg-video-dummy x11-xserver-utils
       - name: Build CLI
         run: cargo build --release -p hrc-cli
