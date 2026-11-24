@@ -11,6 +11,7 @@
 | **Java Runtime automatic** | In every launch the Mojang runtime was downloaded into the launcher's own data folder (`runtimes/java-runtime-*`/`jre-legacy`); no system Java was used. |
 | **Mods really load** | Sodium 0.5.13 and Lithium 0.11.4, downloaded from Modrinth, were loaded by Fabric 1.20.1 (seen in the game log). |
 | **Instance isolation** | Vanilla + Fabric + Quilt on the same Minecraft version in one data folder: separate folders, separate mods (Fabric has Lithium only, Quilt has Ferrite Core only, Vanilla has no mods folder), separate natives, no shared jars. |
+| **Vanilla 26.3 real launch (Linux)** | Passed once in CI after adding Vulkan (lavapipe) to the job: window appeared, process alive after load, screenshot with real content (29,906 colors); I looked at the screenshot: the Minecraft Java Edition welcome screen rendered. One run only; the job stays informational until it passes repeatedly. Not verified on Windows. |
 | **Windows installer (x64)** | Silent install; `horizon-rust-clean.exe`, `hrc-cli.exe`, `horizon-client.jar` present; `hrc-cli.exe` ran on Windows (netcheck reached Mojang, Fabric, Quilt, Forge, NeoForge; Fabric 1.20.1 install completed); the GUI stayed alive 20 s with window title "Horizon Rust Clean". |
 | Install-only matrix | Fabric 1.16.5/1.18/1.20.1/1.21.1/26.3 · Quilt 1.18.2/1.20.1/1.21.1 · Forge 1.12.2/1.16.5/1.18.2/1.20.1/1.21.1/26.3 · NeoForge 1.20.4/1.21.1/26.3 |
 
