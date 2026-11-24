@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- New `light` performance preset for weak PCs (Serial GC, shrinking heap); `perf::recommended(cores)` suggests it for ≤2 cores. Not yet measured on a real weak PC.
+- Removed unused `log` dependency; prototype game window titled "MClauncher Rust".
+
 ## 1.1.0 — 2026-11-24
 - **Play page: Clients section.** Cards for Horizon Client (our own HUD client, its instances), Badlion Client, Lunar Client and custom clients. Badlion/Lunar/custom cards only remember the path of the client's own program (chosen by the player) and start it; their versions, mods and HUD stay in their own launchers. No third-party logos are used. NOT tested in the running app; starting an external program is untested.
 - **Rust Engine page** (sidebar), separate from Java instances and from clients: its own folder `rust-engine/game` (settings file and saved world), graphics settings (seed, view radius, VSync) written to the game's own `horizon-rust.properties` (unit-tested), Launch button, open folder. The engine is the Rust prototype game only; no Horizon mods and no version list beyond "Prototype".

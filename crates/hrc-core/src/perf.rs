@@ -12,6 +12,8 @@ pub enum PerfPreset {
     Balanced,
     /// Balanced + إزالة تكرار النصوص وهدف توقف أقصر.
     Performance,
+    /// للأجهزة الضعيفة (نواتان أو أقل، رام 4 جيجا أو أقل): Serial GC بلا خيوط GC إضافية، ويُرجع الذاكرة الفائضة للنظام.
+    Light,
 }
 
 impl PerfPreset {
@@ -20,13 +22,24 @@ impl PerfPreset {
             "vanilla" => Some(Self::Vanilla),
             "balanced" => Some(Self::Balanced),
             "performance" => Some(Self::Performance),
+            "light" => Some(Self::Light),
             _ => None,
         }
     }
 }
 
+/// الـ preset الموصى به حسب عدد أنوية المعالج: Light لنواتين أو أقل، وإلا Balanced.
+pub fn recommended(cores: usize) -> PerfPreset {
+    if cores <= 2 { PerfPreset::Light } else { PerfPreset::Balanced }
+}
+
 /// وسائط JVM صالحة على Java 8 وحتى 21 (لا أعلام محذوفة مثل CMS).
 pub fn jvm_flags(preset: PerfPreset) -> Vec<String> {
+    if preset == PerfPreset::Light {
+        // SerialGC: بلا خيوط GC متوازية (أقل استهلاكاً للمعالج على نواتين). Min/MaxHeapFreeRatio: يقلّص الـ heap بعد
+        // التنظيف فيعود جزء من الرام للنظام. كلها صالحة من Java 8 حتى 21.
+        return ["-XX:+UseSerialGC", "-XX:MinHeapFreeRatio=10", "-XX:MaxHeapFreeRatio=30", "-XX:+DisableExplicitGC"].map(String::from).to_vec();
+    }
     let base = [
         "-XX:+UseG1GC",
         "-XX:+ParallelRefProcEnabled",
@@ -136,5 +149,16 @@ mod tests {
     fn legacy_hud_range() {
         assert!(legacy_hud_supported("1.8") && legacy_hud_supported("1.8.9") && legacy_hud_supported("1.12.2"));
         assert!(!legacy_hud_supported("1.7.10") && !legacy_hud_supported("1.13") && !legacy_hud_supported("1.20.1"));
+    }
+
+    #[test]
+    fn light_is_serial_gc_and_recommended_for_two_cores() {
+        let l = jvm_flags(PerfPreset::Light);
+        assert!(l.contains(&"-XX:+UseSerialGC".to_string()));
+        assert!(!l.iter().any(|f| f.contains("G1")));
+        assert_eq!(PerfPreset::parse("Light"), Some(PerfPreset::Light));
+        assert_eq!(recommended(1), PerfPreset::Light);
+        assert_eq!(recommended(2), PerfPreset::Light);
+        assert_eq!(recommended(4), PerfPreset::Balanced);
     }
 }

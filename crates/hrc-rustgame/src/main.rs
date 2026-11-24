@@ -182,7 +182,7 @@ fn run_window(args: &Args, cfg: &Config, world: &World, mesh: world::Mesh, user:
     let event_loop = EventLoop::new().context("creating event loop")?;
     let window = Arc::new(
         WindowBuilder::new()
-            .with_title("Horizon Rust (experimental)")
+            .with_title("MClauncher Rust")
             .with_inner_size(LogicalSize::new(1280.0, 720.0))
             .build(&event_loop)
             .context("creating window")?,

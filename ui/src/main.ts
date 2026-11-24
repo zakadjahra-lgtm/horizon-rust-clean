@@ -520,7 +520,7 @@ function clientPanel(inst: Instance): HTMLElement {
       h('input', { type: 'checkbox', checked: p.mods[k]?.enabled, disabled: !legacy, onchange: (e: Event) => { p.mods[k].enabled = (e.target as HTMLInputElement).checked; } }),
       `${labels[k]} (beta)`));
     const perf = h('select', { class: 'input', onchange: (e: Event) => { p.perf = (e.target as HTMLSelectElement).value; } },
-      ...['vanilla', 'balanced', 'performance'].map((v) => h('option', { value: v, selected: p.perf === v }, v)));
+      ...['vanilla', 'balanced', 'performance', 'light'].map((v) => h('option', { value: v, selected: p.perf === v }, v === 'light' ? 'light (weak PCs: 2 cores / 4 GB)' : v)));
     box.replaceChildren(
       h('h2', {}, title),
       h('p', { class: 'muted' }, !hud ? 'Plain Minecraft with launcher-side tools only. Nothing is injected into the game; changes apply on the next launch.' : legacy
