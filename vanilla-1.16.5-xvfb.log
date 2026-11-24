@@ -1,0 +1,73 @@
+Installed 1.16.5 [Vanilla] launch id 1.16.5 (2938 files)
+Java runtime: /home/runner/work/_temp/hrc-vanilla-1.16.5/runtimes/jre-legacy/bin/java
+[16:44:04] [Render thread/INFO]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[16:44:05] [Render thread/INFO]: Setting user: Player
+[16:44:05] [Render thread/INFO]: Backend library: LWJGL version 3.2.2 build 10
+[16:44:08] [Render thread/WARN]: ERROR : Couldn't load Narrator library : Unable to load library 'fliteWrapper': Native library (linux-x86-64/libfliteWrapper.so) not found in resource path ([file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/patchy/1.3.9/patchy-1.3.9.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/oshi-project/oshi-core/1.1/oshi-core-1.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/net/java/dev/jna/jna/4.4.0/jna-4.4.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/net/java/dev/jna/platform/3.4.0/platform-3.4.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/ibm/icu/icu4j/66.1/icu4j-66.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/javabridge/1.0.22/javabridge-1.0.22.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/net/sf/jopt-simple/jopt-simple/5.0.3/jopt-simple-5.0.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/io/netty/netty-all/4.1.25.Final/netty-all-4.1.25.Final.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/google/guava/guava/21.0/guava-21.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/commons-io/commons-io/2.5/commons-io-2.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/commons-codec/commons-codec/1.10/commons-codec-1.10.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/brigadier/1.0.17/brigadier-1.0.17.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/datafixerupper/4.0.26/datafixerupper-4.0.26.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/authlib/2.1.28/authlib-2.1.28.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/it/unimi/dsi/fastutil/8.2.1/fastutil-8.2.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/logging/log4j/log4j-api/2.8.1/log4j-api-2.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/apache/logging/log4j/log4j-core/2.8.1/log4j-core-2.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl/3.2.2/lwjgl-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-jemalloc/3.2.2/lwjgl-jemalloc-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-openal/3.2.2/lwjgl-openal-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-opengl/3.2.2/lwjgl-opengl-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-glfw/3.2.2/lwjgl-glfw-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-stb/3.2.2/lwjgl-stb-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/org/lwjgl/lwjgl-tinyfd/3.2.2/lwjgl-tinyfd-3.2.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/libraries/com/mojang/text2speech/1.11.3/text2speech-1.11.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.16.5/shared/versions/1.16.5/1.16.5.jar])
+[16:44:08] [Render thread/INFO]: Reloading ResourceManager: Default
+[16:44:08] [Realms Notification Availability checker #1/INFO]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+AL lib: (EE) ALCplaybackAlsa_open: Could not open playback device 'default': No such file or directory
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+AL lib: (EE) ALCplaybackAlsa_open: Could not open playback device 'default': No such file or directory
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+AL lib: (EE) ALCplaybackAlsa_open: Could not open playback device 'default': No such file or directory
+[16:44:12] [Render thread/ERROR]: Error starting SoundSystem. Turning off sounds & music
+java.lang.IllegalStateException: Failed to open OpenAL device
+	at ddv.g(SourceFile:211) ~[1.16.5.jar:?]
+	at ddv.a(SourceFile:136) ~[1.16.5.jar:?]
+	at enr.g(SourceFile:99) ~[1.16.5.jar:?]
+	at enr.a(SourceFile:90) ~[1.16.5.jar:?]
+	at enu.a(SourceFile:116) ~[1.16.5.jar:?]
+	at enu.a(SourceFile:39) ~[1.16.5.jar:?]
+	at ack.a(SourceFile:13) ~[1.16.5.jar:?]
+	at java.util.concurrent.CompletableFuture.uniAccept(CompletableFuture.java:656) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:632) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:442) ~[?:1.8.0_202]
+	at acl.a(SourceFile:71) ~[1.16.5.jar:?]
+	at aob.execute(SourceFile:94) ~[1.16.5.jar:?]
+	at acl.a(SourceFile:70) ~[1.16.5.jar:?]
+	at java.util.concurrent.CompletableFuture$UniCompletion.claim(CompletableFuture.java:529) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture.uniAccept(CompletableFuture.java:653) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:632) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:474) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture.postFire(CompletableFuture.java:561) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:635) ~[?:1.8.0_202]
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:442) ~[?:1.8.0_202]
+	at com.mojang.blaze3d.systems.RenderSystem.replayQueue(SourceFile:116) [1.16.5.jar:?]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(SourceFile:103) [1.16.5.jar:?]
+	at dez.e(SourceFile:308) [1.16.5.jar:?]
+	at djz.e(SourceFile:1068) [1.16.5.jar:?]
+	at djz.e(SourceFile:681) [1.16.5.jar:?]
+	at net.minecraft.client.main.Main.main(SourceFile:215) [1.16.5.jar:?]
+[16:44:13] [Render thread/INFO]: Created: 1024x1024x4 minecraft:textures/atlas/blocks.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 256x128x4 minecraft:textures/atlas/signs.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 1024x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 1024x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[16:44:13] [Render thread/INFO]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[16:44:14] [Render thread/INFO]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[16:44:14] [Render thread/INFO]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[16:44:14] [Render thread/INFO]: Created: 256x128x0 minecraft:textures/atlas/mob_effects.png-atlas
