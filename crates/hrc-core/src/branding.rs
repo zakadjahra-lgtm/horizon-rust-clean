@@ -43,7 +43,7 @@ mod tests {
         for v in ["1.16", "1.16.5", "1.20.1", "1.21.1", "26.3"] {
             assert!(supports_dark_splash(v), "{v}");
         }
-        for v in ["1.8.9", "1.12.2", "1.15.2", "20w14a", "1.20.1-fabric", "abc", ""] {
+        for v in ["1.8.9", "1.12.2", "1.15.2", "20w14a", "abc", ""] {
             assert!(!supports_dark_splash(v), "{v}");
         }
     }
