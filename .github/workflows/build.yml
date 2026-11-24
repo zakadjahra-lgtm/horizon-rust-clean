@@ -157,7 +157,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
-          gh release create "$TAG" "$(find . -name MClauncher-Setup.exe | head -1)" "$(find . -name horizon-rust-clean.exe | head -1)" "$(find . -name hrc-cli.exe | head -1)" "$(find . -name horizon-rust-game.exe | head -1)" CHANGELOG.md STATUS.md \
+          gh release create "$TAG" "$(find . -name MClauncher-Setup.exe | head -1)" CHANGELOG.md STATUS.md \
             --repo "${{ github.repository }}" \
             --title "MClauncher $TAG (test build)" \
             --prerelease \

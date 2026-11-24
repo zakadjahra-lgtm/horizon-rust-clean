@@ -231,6 +231,8 @@ async fn do_launch(app: &AppHandle, st: &AppState, id: &str) -> Result<(), Strin
         return spawn_and_track(app, id, cmd).await;
     }
     let shared = st.data.join("shared");
+    // خلفية شاشة بداية Mojang سوداء (خيار اللعبة نفسه؛ لا يُكتب فوق اختيار اللاعب).
+    let _ = hrc_core::branding::ensure_dark_splash(&instance::game_dir(&st.data, id), &inst.version_id);
     let version = install::load_version(&shared, inst.launch_version_id()).map_err(es)?;
 
     let manual = manual_java(&inst, st);

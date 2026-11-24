@@ -36,7 +36,7 @@ const LOADERS: { id: string; label: string; hint: string; hidden?: boolean }[] =
   { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
   { id: 'rusttools', hidden: true, label: 'Horizon (Rust tools)', hint: 'Original Minecraft (Java), any version. No mods and nothing injected into the game. The launcher (Rust) adds an optional performance preset and tools: log cleaner, crash cleaner, screenshot sorter.' },
   { id: 'rust', hidden: true, label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
-  { id: 'horizon', label: 'Horizon Client', hint: 'Our clean client. HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
+  { id: 'horizon', label: 'Rust', hint: 'Our clean client. HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
 // الإدخالان المخفيان لا يظهران في القوائم؛ تبقى المعرّفات حتى لا تتعطل instances قديمة.
 const SHOWN = LOADERS.filter((l) => !l.hidden);
@@ -222,9 +222,9 @@ function clientsSection(): HTMLElement {
   if (first) hzSel.value = first.id;
   const hzInst = (): Instance | undefined => hz.find((i) => i.id === hzSel.value);
   grid.append(h('div', { class: 'card', style: 'margin:0' },
-    h('div', { class: 'row' }, tile('Horizon Client'), h('div', {}, h('strong', {}, 'Horizon Client'),
+    h('div', { class: 'row' }, tile('Rust'), h('div', {}, h('strong', {}, 'Rust'),
       h('div', { class: 'muted', style: 'font-size:12px' }, 'HUD: FPS, CPS, keystrokes (all off by default)'))),
-    hz.length ? h('div', { style: 'margin-top:10px' }, hzSel) : h('p', { class: 'muted' }, 'No Horizon Client instance yet.'),
+    hz.length ? h('div', { style: 'margin-top:10px' }, hzSel) : h('p', { class: 'muted' }, 'No Rust instance yet.'),
     h('div', { class: 'row', style: 'margin-top:10px' },
       hz.length ? h('span', { class: 'badge ' + (first?.installed ? 'ok' : '') }, first?.installed ? 'installed' : 'not installed') : null,
       hz.length

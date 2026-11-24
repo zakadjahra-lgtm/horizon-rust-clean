@@ -1,6 +1,7 @@
 //! Horizon Rust Clean — المحرك الأساسي. لا يحتوي أي منطق للعبة؛ يدير ملفات Mojang
 //! الرسمية ويشغّل Minecraft الأصلية عبر Java.
 
+pub mod branding;
 pub mod content;
 pub mod curseforge;
 pub mod rust_engine;
