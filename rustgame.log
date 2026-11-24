@@ -1,0 +1,6 @@
+Horizon Rust (experimental) 0.1: seed 1337 radius 8 -> 289 chunks, 145168 faces in 58 ms
+[2m2026-11-24T16:42:08.828557Z[0m [32m INFO[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m Debug utils not enabled: debug_utils_user_data not passed to Instance::from_raw
+[2m2026-11-24T16:42:08.830475Z[0m [32m INFO[0m [2mwgpu_core::instance[0m[2m:[0m Adapter Vulkan AdapterInfo { name: "llvmpipe (LLVM 21.1.8, 256 bits)", vendor: 65541, device: 0, device_type: Cpu, driver: "llvmpipe", driver_info: "Mesa 26.0.8-1ubuntu0.3 (LLVM 21.1.8)", backend: Vulkan }
+Adapter: llvmpipe (LLVM 21.1.8, 256 bits) (Vulkan, Cpu)
+Rendered 8 frames, 36.71 ms/frame (27 fps) at 1280x720
+Saved screenshot: ci-out/rustgame.png

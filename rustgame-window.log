@@ -1,0 +1,7 @@
+Horizon Rust (experimental) 0.1: seed 1337 radius 8 -> 289 chunks, 145168 faces in 59 ms
+[2m2026-11-24T16:42:13.024343Z[0m [33m WARN[0m [2mwinit::platform_impl::platform::x11::xdisplay[0m[2m:[0m error setting XSETTINGS; Xft options won't reload automatically
+[2m2026-11-24T16:42:13.098377Z[0m [33m WARN[0m [2mwinit::platform_impl::platform::x11::util::randr[0m[2m:[0m XRandR reported that the display's 0mm in size, which is certifiably insane
+[2m2026-11-24T16:42:13.098422Z[0m [32m INFO[0m [2mwinit::platform_impl::platform::x11::window[0m[2m:[0m Guessed window scale factor: 1
+[2m2026-11-24T16:42:13.118609Z[0m [32m INFO[0m [2mwgpu_hal::vulkan::instance[0m[2m:[0m Debug utils not enabled: debug_utils_user_data not passed to Instance::from_raw
+[2m2026-11-24T16:42:13.120860Z[0m [32m INFO[0m [2mwgpu_core::instance[0m[2m:[0m Adapter Vulkan AdapterInfo { name: "llvmpipe (LLVM 21.1.8, 256 bits)", vendor: 65541, device: 0, device_type: Cpu, driver: "llvmpipe", driver_info: "Mesa 26.0.8-1ubuntu0.3 (LLVM 21.1.8)", backend: Vulkan }
+Adapter: llvmpipe (LLVM 21.1.8, 256 bits) (Vulkan, Cpu)
