@@ -44,3 +44,50 @@ jobs:
         run: cargo check --locked -p horizon-client
       - name: Unit tests of the HUD / extras logic
         run: cargo test --locked -p horizon-client-render --lib -- extras pvp zoom options_ui
+
+  # Rapports separados por sistema: cargo check NO prueba que el juego arranque; solo que compila.
+  game-check-os:
+    name: game-check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --locked -p horizon-client
+
+  game-lib-tests:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: bash "$GITHUB_WORKSPACE/tools/ci/apt_install.sh" libasound2-dev libudev-dev
+      - name: All unit tests of horizon-client-render and horizon-theme
+        run: cargo test --locked -p horizon-client-render -p horizon-theme --lib
+
+  game-clippy:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: bash "$GITHUB_WORKSPACE/tools/ci/apt_install.sh" libasound2-dev libudev-dev
+      - name: Clippy (warnings are errors) on the crate this branch changes
+        run: cargo clippy --locked -p horizon-client-render --lib -- -D warnings
+
+  python-tests:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python unit tests (tests/)
+        run: python3 -m unittest discover -s tests
