@@ -1,0 +1,16 @@
+
+X.Org X Server 1.21.1.22
+X Protocol Version 11, Revision 0
+Current Operating System: Linux ip-10-0-138-35 7.0.0-1016-aws #17-Ubuntu SMP PREEMPT Mon Oct 19 17:36:33 UTC 2026 x86_64
+Kernel command line: BOOT_IMAGE=/vmlinuz-7.0.0-1016-aws root=UUID=48725d6c-e0d1-48a5-aafd-e68475eb9c52 ro console=tty1 console=ttyS0 nvme_core.io_timeout=4294967295 rootflags=nobarrier,data=writeback,journal_async_commit,commit=30
+xorg-server 2:21.1.22-1ubuntu1.3 (For technical support please see http://www.ubuntu.com/support) 
+Current version of pixman: 0.46.4
+	Before reporting problems, check http://wiki.x.org
+	to make sure that you have the latest version.
+Markers: (--) probed, (**) from config file, (==) default setting,
+	(++) from command line, (!!) notice, (II) informational,
+	(WW) warning, (EE) error, (NI) not implemented, (??) unknown.
+(++) Log file: "/home/runner/work/horizon-rust-clean/horizon-rust-clean/ci-out/xorg.log", Time: Tue Nov 24 16:41:59 2026
+(++) Using config file: "/home/runner/work/horizon-rust-clean/horizon-rust-clean/ci/xorg-dummy.conf"
+(==) Using system config directory "/usr/share/X11/xorg.conf.d"
+(II) Server terminated successfully (0). Closing log file.

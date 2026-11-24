@@ -1,0 +1,66 @@
+Installed 1.8.9 [Vanilla] launch id 1.8.9 (1056 files)
+Java runtime: /home/runner/work/_temp/hrc-1.8.9/runtimes/jre-legacy/bin/java
+[HorizonClient] agent loaded (game dir: /home/runner/work/_temp/hrc-1.8.9/instances/cli-1.8.9/game)
+[16:42:06] [Client thread/INFO]: Setting user: Player
+[16:42:06] [Client thread/INFO]: (Session ID is token:0:00000000-0000-0000-0000-000000000000)
+[16:42:07] [Client thread/INFO]: LWJGL Version: 2.9.4
+[HorizonClient] hooked LWJGL 2 Display.update
+---- Minecraft Crash Report ----
+// This doesn't make any sense!
+
+Time: 11/24/26 4:42 PM
+Description: Initializing game
+
+java.lang.ExceptionInInitializerError
+	at ave.ar(SourceFile:560)
+	at ave.am(SourceFile:361)
+	at ave.a(SourceFile:310)
+	at net.minecraft.client.main.Main.main(SourceFile:124)
+Caused by: java.lang.ArrayIndexOutOfBoundsException: 0
+	at org.lwjgl.opengl.XRandR.findPrimary(XRandR.java:326)
+	at org.lwjgl.opengl.XRandR.ScreentoDisplayMode(XRandR.java:315)
+	at org.lwjgl.opengl.LinuxDisplay$3.run(LinuxDisplay.java:746)
+	at org.lwjgl.opengl.LinuxDisplay$3.run(LinuxDisplay.java:743)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.lwjgl.opengl.LinuxDisplay.init(LinuxDisplay.java:743)
+	at org.lwjgl.opengl.Display.<clinit>(Display.java:138)
+	... 4 more
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Stacktrace:
+	at ave.ar(SourceFile:560)
+	at ave.am(SourceFile:361)
+
+-- Initialization --
+Details:
+Stacktrace:
+	at ave.a(SourceFile:310)
+	at net.minecraft.client.main.Main.main(SourceFile:124)
+
+-- System Details --
+Details:
+	Minecraft Version: 1.8.9
+	Operating System: Linux (amd64) version 7.0.0-1016-aws
+	Java Version: 1.8.0_202, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 474478584 bytes (452 MB) / 536870912 bytes (512 MB) up to 1610612736 bytes (1536 MB)
+	JVM Flags: 9 total; -Xmx1536M -Xms512M -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=50 -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:+DisableExplicitGC
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	Launched Version: 1.8.9
+	LWJGL: 2.9.4
+	OpenGL: ~~ERROR~~ RuntimeException: No OpenGL context found in the current thread.
+	GL Caps: 
+	Using VBOs: No
+	Is Modded: Probably not. Jar signature remains and client brand is untouched.
+	Type: Client (map_client.txt)
+	Resource Packs: 
+	Current Language: ~~ERROR~~ NullPointerException: null
+	Profiler Position: N/A (disabled)
+	CPU: <unknown>
+#@!@# Game crashed! Crash report saved to: #@!@# /home/runner/work/_temp/hrc-1.8.9/instances/cli-1.8.9/game/crash-reports/crash-2026-11-24_16.42.07-client.txt
+[16:42:07] [Client Shutdown Thread/INFO]: Stopping server
+Game exited: exit status: 255
