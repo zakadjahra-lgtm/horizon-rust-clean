@@ -61,6 +61,19 @@ struct Mod {
     summary: String,
     #[serde(default, rename = "downloadCount")]
     download_count: f64,
+    #[serde(default)]
+    logo: Option<Logo>,
+    #[serde(default)]
+    authors: Vec<Author>,
+}
+#[derive(Deserialize)]
+struct Logo {
+    #[serde(default, rename = "thumbnailUrl")]
+    thumbnail_url: Option<String>,
+}
+#[derive(Deserialize)]
+struct Author {
+    name: String,
 }
 #[derive(Deserialize)]
 struct FilesResp {
@@ -90,7 +103,14 @@ struct HashInfo {
 /// `slug` في النتيجة هو معرّف المشروع الرقمي (يحتاجه التنزيل).
 pub fn parse_search(body: &str) -> Result<Vec<Hit>> {
     let r: SearchResp = serde_json::from_str(body)?;
-    Ok(r.data.into_iter().map(|m| Hit { slug: m.id.to_string(), title: m.name, description: m.summary, downloads: m.download_count as u64 }).collect())
+    Ok(r.data.into_iter().map(|m| Hit {
+        slug: m.id.to_string(),
+        title: m.name,
+        description: m.summary,
+        downloads: m.download_count as u64,
+        icon: crate::modrinth::safe_icon(m.logo.and_then(|l| l.thumbnail_url)),
+        author: m.authors.into_iter().next().map(|a| a.name).unwrap_or_default(),
+    }).collect())
 }
 
 /// الأحدث من نوع release (releaseType 1)، وإلا الأحدث أياً كان.
@@ -170,9 +190,10 @@ mod tests {
 
     #[test]
     fn parses_a_search_reply() {
-        let body = r#"{"data":[{"id":394468,"name":"Sodium","summary":"Fast","downloadCount":1.5e7,"slug":"sodium"}],"pagination":{}}"#;
+        let body = r#"{"data":[{"id":394468,"name":"Sodium","summary":"Fast","downloadCount":1.5e7,"slug":"sodium","logo":{"thumbnailUrl":"https://media.forgecdn.net/s.png"},"authors":[{"name":"jellysquid3"}]}],"pagination":{}}"#;
         let hits = parse_search(body).unwrap();
         assert_eq!((hits[0].slug.as_str(), hits[0].title.as_str(), hits[0].downloads), ("394468", "Sodium", 15_000_000));
+        assert_eq!((hits[0].icon.as_deref(), hits[0].author.as_str()), (Some("https://media.forgecdn.net/s.png"), "jellysquid3"));
     }
 
     #[test]

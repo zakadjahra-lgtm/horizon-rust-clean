@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Browse results show each project's icon and author (https icons only).
+
 ## 1.0.0 — 2026-11-23
 
 ### Added

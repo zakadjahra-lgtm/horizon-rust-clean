@@ -28,6 +28,14 @@ pub struct Hit {
     pub title: String,
     pub description: String,
     pub downloads: u64,
+    /// صورة المشروع (https فقط) واسم المؤلف، للعرض في Browse.
+    pub icon: Option<String>,
+    pub author: String,
+}
+
+/// يقبل روابط https فقط للأيقونات.
+pub fn safe_icon(u: Option<String>) -> Option<String> {
+    u.filter(|u| u.starts_with("https://"))
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,6 +50,10 @@ struct RawHit {
     description: String,
     #[serde(default)]
     downloads: u64,
+    #[serde(default)]
+    icon_url: Option<String>,
+    #[serde(default)]
+    author: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -119,7 +131,7 @@ pub async fn search(client: &reqwest::Client, query: &str, loader: Loader, mc: &
     let Some(loader) = loader.mods_loader(mc) else { return err("هذه البيئة لا تدعم المودات") };
     let Some(url) = search_url(query, loader, mc) else { return err("هذه البيئة لا تدعم المودات") };
     let r: SearchResp = client.get(url).send().await?.error_for_status()?.json().await?;
-    Ok(r.hits.into_iter().map(|h| Hit { slug: h.slug, title: h.title, description: h.description, downloads: h.downloads }).collect())
+    Ok(r.hits.into_iter().map(|h| Hit { slug: h.slug, title: h.title, description: h.description, downloads: h.downloads, icon: safe_icon(h.icon_url), author: h.author }).collect())
 }
 
 async fn versions(client: &reqwest::Client, project: &str, loader: Loader, mc: &str) -> Result<Vec<Version>> {
@@ -205,7 +217,7 @@ pub fn browse_url(query: &str, kind: Kind, loader: Option<Loader>, mc: Option<&s
 pub async fn browse(client: &reqwest::Client, query: &str, kind: Kind, loader: Option<Loader>, mc: Option<&str>) -> Result<Vec<Hit>> {
     let Some(url) = browse_url(query, kind, loader, mc) else { return err("اختر Fabric أو Forge أو NeoForge أو Quilt للبحث عن مودات") };
     let r: SearchResp = client.get(url).send().await?.error_for_status()?.json().await?;
-    Ok(r.hits.into_iter().map(|h| Hit { slug: h.slug, title: h.title, description: h.description, downloads: h.downloads }).collect())
+    Ok(r.hits.into_iter().map(|h| Hit { slug: h.slug, title: h.title, description: h.description, downloads: h.downloads, icon: safe_icon(h.icon_url), author: h.author }).collect())
 }
 
 /// ينزّل حزمة موارد أو shader (ملف .zip واحد) إلى مجلدها داخل الـ instance، مع SHA1 من Modrinth.
@@ -279,5 +291,13 @@ mod tests {
         assert!(r.contains("project_type%3Aresourcepack") && !r.contains("categories"));
         let sh = browse_url("bsl", Kind::ShaderPacks, None, Some("")).unwrap();
         assert!(sh.contains("project_type%3Ashader") && !sh.contains("versions"));
+    }
+
+    #[test]
+    fn icons_must_be_https() {
+        assert_eq!(safe_icon(Some("https://cdn.modrinth.com/a.png".into())).as_deref(), Some("https://cdn.modrinth.com/a.png"));
+        assert_eq!(safe_icon(Some("http://x/a.png".into())), None);
+        assert_eq!(safe_icon(Some("javascript:alert(1)".into())), None);
+        assert_eq!(safe_icon(None), None);
     }
 }

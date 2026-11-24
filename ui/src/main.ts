@@ -575,10 +575,12 @@ function renderBrowse(): HTMLElement {
     if (needLoader) { toast('Choose Fabric, Forge, NeoForge or Quilt first', true); return; }
     results.replaceChildren(h('span', { class: 'muted' }, 'Searching…'));
     try {
-      const hits: { slug: string; title: string; description: string; downloads: number }[] =
+      const hits: { slug: string; title: string; description: string; downloads: number; icon: string | null; author: string }[] =
         await invoke('browse_search', { source: st.source, kind: st.kind, loader: st.kind === 'mods' ? st.loader : null, mc: st.mc || null, query: q.value });
-      results.replaceChildren(...(hits.length ? hits.map((x) => h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line)' },
-        h('div', { class: 'grow' }, h('strong', {}, x.title), h('div', { class: 'muted' }, x.description),
+      results.replaceChildren(...(hits.length ? hits.map((x) => h('div', { class: 'list-item', style: 'padding:6px 0;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center' },
+        x.icon ? h('img', { src: x.icon, alt: '', width: '48', height: '48', loading: 'lazy', style: 'border-radius:8px;object-fit:cover;flex:none' })
+          : h('div', { style: 'width:48px;height:48px;border-radius:8px;background:var(--line);flex:none' }),
+        h('div', { class: 'grow' }, h('strong', {}, x.title), x.author ? h('span', { class: 'muted' }, ` by ${x.author}`) : null, h('div', { class: 'muted' }, x.description),
           h('div', { class: 'muted', style: 'font-size:12px' }, `${x.downloads.toLocaleString()} downloads`)),
         h('button', {
           class: 'btn', disabled: !st.target,
