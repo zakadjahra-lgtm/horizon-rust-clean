@@ -1,0 +1,102 @@
+Installed 1.12.2 [Forge] launch id 1.12.2-forge-14.23.5.2859 (2973 files)
+Java runtime: /home/runner/work/_temp/hrc-forge-1.12.2/runtimes/jre-legacy/bin/java
+[16:42:57] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Using primary tweak class name net.minecraftforge.fml.common.launcher.FMLTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLTweaker
+[16:42:57] [main/INFO] [FML]: Forge Mod Loader version 14.23.5.2859 for Minecraft 1.12.2 loading
+[16:42:57] [main/INFO] [FML]: Java is Java HotSpot(TM) 64-Bit Server VM, version 1.8.0_202, running on Linux:amd64:7.0.0-1020-azure, installed at /home/runner/work/_temp/hrc-forge-1.12.2/runtimes/jre-legacy
+[16:42:57] [main/INFO] [FML]: Searching /home/runner/work/_temp/hrc-forge-1.12.2/instances/cli-forge-1.12.2/game/mods for mods
+[16:42:57] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[16:42:57] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[16:42:59] [main/INFO] [FML]: Found valid fingerprint for Minecraft Forge. Certificate fingerprint e3c3d50c7c986df74c645c0ac54639741c90a557
+[16:42:59] [main/INFO] [FML]: Found valid fingerprint for Minecraft. Certificate fingerprint cd99959656f753dc28d863b46769f7f8fbaefcfc
+[16:42:59] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[16:42:59] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[16:42:59] [main/INFO] [LaunchWrapper]: Loading tweak class name net.minecraftforge.fml.common.launcher.TerminalTweaker
+[16:42:59] [main/INFO] [LaunchWrapper]: Calling tweak class net.minecraftforge.fml.common.launcher.TerminalTweaker
+[16:42:59] [main/INFO] [LaunchWrapper]: Launching wrapped minecraft {net.minecraft.client.main.Main}
+[16:43:00] [Client thread/INFO] [minecraft/Minecraft]: Setting user: Player
+[16:43:02] [Client thread/INFO] [minecraft/Minecraft]: LWJGL Version: 2.9.4
+[16:43:03] [Client thread/INFO] [FML]: Could not load splash.properties, will create a default one
+[16:43:03] [Client thread/INFO] [FML]: -- System Details --
+Details:
+	Minecraft Version: 1.12.2
+	Operating System: Linux (amd64) version 7.0.0-1020-azure
+	Java Version: 1.8.0_202, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 872012128 bytes (831 MB) / 1019740160 bytes (972 MB) up to 1908932608 bytes (1820 MB)
+	JVM Flags: 2 total; -Xmx2048M -Xms512M
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: 
+	Loaded coremods (and transformers): 
+	GL info: ' Vendor: 'Mesa' Version: '4.5 (Compatibility Profile) Mesa 26.0.8-1ubuntu0.3' Renderer: 'llvmpipe (LLVM 21.1.8, 256 bits)'
+[16:43:03] [Client thread/INFO] [FML]: MinecraftForge v14.23.5.2859 Initialized
+[16:43:03] [Client thread/INFO] [FML]: Starts to replace vanilla recipe ingredients with ore ingredients.
+[16:43:03] [Client thread/INFO] [FML]: Invalid recipe found with multiple oredict ingredients in the same ingredient...
+[16:43:04] [Client thread/INFO] [FML]: Replaced 1227 ore ingredients
+[16:43:04] [Client thread/INFO] [FML]: Searching /home/runner/work/_temp/hrc-forge-1.12.2/instances/cli-forge-1.12.2/game/mods for mods
+[16:43:05] [Client thread/INFO] [FML]: Forge Mod Loader has identified 4 mods to load
+[16:43:05] [Client thread/INFO] [FML]: Attempting connection with missing mods [minecraft, mcp, FML, forge] at CLIENT
+[16:43:05] [Client thread/INFO] [FML]: Attempting connection with missing mods [minecraft, mcp, FML, forge] at SERVER
+[16:43:05] [Client thread/INFO] [minecraft/SimpleReloadableResourceManager]: Reloading ResourceManager: Default, FMLFileResourcePack:Forge Mod Loader, FMLFileResourcePack:Minecraft Forge
+[16:43:05] [Client thread/INFO] [FML]: Processing ObjectHolder annotations
+[16:43:05] [Client thread/INFO] [FML]: Found 1168 ObjectHolder annotations
+[16:43:05] [Client thread/INFO] [FML]: Identifying ItemStackHolder annotations
+[16:43:05] [Client thread/INFO] [FML]: Found 0 ItemStackHolder annotations
+[16:43:05] [Client thread/INFO] [FML]: Configured a dormant chunk cache size of 0
+[16:43:05] [Forge Version Check/INFO] [forge.VersionCheck]: [forge] Starting version check at http://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json
+[16:43:05] [Client thread/INFO] [FML]: Applying holder lookups
+[16:43:05] [Client thread/INFO] [FML]: Holder lookups applied
+[16:43:05] [Client thread/INFO] [FML]: Applying holder lookups
+[16:43:05] [Client thread/INFO] [FML]: Holder lookups applied
+[16:43:05] [Client thread/INFO] [FML]: Applying holder lookups
+[16:43:05] [Client thread/INFO] [FML]: Holder lookups applied
+[16:43:05] [Client thread/INFO] [FML]: Applying holder lookups
+[16:43:05] [Client thread/INFO] [FML]: Holder lookups applied
+[16:43:05] [Client thread/INFO] [FML]: Injecting itemstacks
+[16:43:05] [Client thread/INFO] [FML]: Itemstack injection complete
+[16:43:06] [Sound Library Loader/INFO] [minecraft/SoundManager]: Starting up SoundSystem...
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: Initializing LWJGL OpenAL
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: (The LWJGL binding of OpenAL.  For more information, see http://www.lwjgl.org)
+[16:43:06] [Thread-3/INFO] [FML]: Using sync timing. 200 frames of Display.update took 809168269 nanos
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+AL lib: (EE) alsa_open_playback: Could not open playback device 'default': No such file or directory
+[16:43:06] [Thread-4/ERROR] [minecraft/SoundManager]: Error in class 'LibraryLWJGLOpenAL'
+[16:43:06] [Thread-4/ERROR] [minecraft/SoundManager]: Unable to initialize OpenAL.  Probable cause: OpenAL not supported.
+[16:43:06] [Thread-4/WARN] [minecraft/SoundManager]: ERROR MESSAGE:
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: Could not locate OpenAL library.
+[16:43:06] [Thread-4/WARN] [minecraft/SoundManager]: STACK TRACE:
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: org.lwjgl.openal.AL.create(AL.java:156)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: org.lwjgl.openal.AL.create(AL.java:102)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: org.lwjgl.openal.AL.create(AL.java:206)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: paulscode.sound.libraries.LibraryLWJGLOpenAL.init(LibraryLWJGLOpenAL.java:164)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: paulscode.sound.SoundSystem.CommandNewLibrary(SoundSystem.java:1576)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: paulscode.sound.SoundSystem.CommandQueue(SoundSystem.java:2572)
+[16:43:06] [Thread-4/INFO] [minecraft/SoundManager]: paulscode.sound.CommandThread.run(CommandThread.java:121)
+[16:43:06] [Forge Version Check/INFO] [forge.VersionCheck]: [forge] Found status: UP_TO_DATE Target: null
+[16:43:06] [Sound Library Loader/WARN] [minecraft/SoundManager]: ERROR MESSAGE:
+[16:43:06] [Sound Library Loader/INFO] [minecraft/SoundManager]: Could not locate OpenAL library.
+[16:43:06] [Sound Library Loader/INFO] [minecraft/SoundManager]: Starting up SoundSystem...
+[16:43:07] [Thread-6/INFO] [minecraft/SoundManager]: Switching to No Sound
+[16:43:07] [Thread-6/INFO] [minecraft/SoundManager]: (Silent Mode)
+[16:43:07] [Sound Library Loader/INFO] [minecraft/SoundManager]: Sound engine started
+[16:43:08] [Client thread/INFO] [FML]: Max texture size: 16384
+[16:43:08] [Client thread/INFO] [minecraft/TextureMap]: Created: 512x512 textures-atlas
+[16:43:09] [Client thread/INFO] [FML]: Applying holder lookups
+[16:43:09] [Client thread/INFO] [FML]: Holder lookups applied
+[16:43:09] [Client thread/INFO] [FML]: Injecting itemstacks
+[16:43:09] [Client thread/INFO] [FML]: Itemstack injection complete
+[16:43:10] [Client thread/INFO] [FML]: Forge Mod Loader has successfully loaded 4 mods
+[16:43:10] [Client thread/WARN] [mojang/NarratorLinux]: ERROR : Couldn't load Narrator library : Unable to load library 'fliteWrapper': Native library (linux-x86-64/libfliteWrapper.so) not found in resource path ([file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/minecraftforge/forge/1.12.2-14.23.5.2859/forge-1.12.2-14.23.5.2859.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/ow2/asm/asm-debug-all/5.2/asm-debug-all-5.2.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/jline/jline/3.5.1/jline-3.5.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/typesafe/akka/akka-actor_2.11/2.3.3/akka-actor_2.11-2.3.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/typesafe/config/1.2.1/config-1.2.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-actors-migration_2.11/1.1.0/scala-actors-migration_2.11-1.1.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2_mc/scala-continuations-library_2.11-1.0.2_mc.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/plugins/scala-continuations-plugin_2.11.1/1.0.2_mc/scala-continuations-plugin_2.11.1-1.0.2_mc.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-swing_2.11/1.0.1/scala-swing_2.11-1.0.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/scala-lang/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/lzma/lzma/0.0.1/lzma-0.0.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/java3d/vecmath/1.5.2/vecmath-1.5.2.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/maven/maven-artifact/3.5.3/maven-artifact-3.5.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/sf/jopt-simple/jopt-simple/5.0.3/jopt-simple-5.0.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/logging/log4j/log4j-api/2.15.0/log4j-api-2.15.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/logging/log4j/log4j-core/2.15.0/log4j-core-2.15.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/logging/log4j/log4j-slf4j18-impl/2.15.0/log4j-slf4j18-impl-2.15.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/mojang/patchy/1.3.9/patchy-1.3.9.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/oshi-project/oshi-core/1.1/oshi-core-1.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/java/dev/jna/jna/4.4.0/jna-4.4.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/java/dev/jna/platform/3.4.0/platform-3.4.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/ibm/icu/icu4j-core-mojang/51.2/icu4j-core-mojang-51.2.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/paulscode/codecjorbis/20101023/codecjorbis-20101023.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/paulscode/codecwav/20101023/codecwav-20101023.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/paulscode/libraryjavasound/20101123/libraryjavasound-20101123.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/paulscode/librarylwjglopenal/20100824/librarylwjglopenal-20100824.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/paulscode/soundsystem/20120107/soundsystem-20120107.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/io/netty/netty-all/4.1.9.Final/netty-all-4.1.9.Final.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/google/guava/guava/21.0/guava-21.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/commons-io/commons-io/2.5/commons-io-2.5.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/commons-codec/commons-codec/1.10/commons-codec-1.10.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/mojang/authlib/1.5.25/authlib-1.5.25.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/mojang/realms/1.10.22/realms-1.10.22.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/it/unimi/dsi/fastutil/7.1.0/fastutil-7.1.0.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl/2.9.4-nightly-20150209/lwjgl-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl_util/2.9.4-nightly-20150209/lwjgl_util-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl-platform/2.9.4-nightly-20150209/lwjgl-platform-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/libraries/com/mojang/text2speech/1.10.3/text2speech-1.10.3.jar, file:/home/runner/work/_temp/hrc-forge-1.12.2/shared/versions/1.12.2-forge-14.23.5.2859/1.12.2-forge-14.23.5.2859.jar, asmgen:/])
+[16:43:10] [Realms Notification Availability checker #1/INFO] [mojang/RealmsClient]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+Game exited: exit status: 143
