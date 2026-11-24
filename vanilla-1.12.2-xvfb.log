@@ -1,0 +1,38 @@
+Installed 1.12.2 [Vanilla] launch id 1.12.2 (1626 files)
+Java runtime: /home/runner/work/_temp/hrc-vanilla-1.12.2/runtimes/jre-legacy/bin/java
+[16:42:36] [Client thread/INFO]: Setting user: Player
+[16:42:37] [Client thread/INFO]: LWJGL Version: 2.9.4
+[16:42:38] [Client thread/INFO]: Reloading ResourceManager: Default
+[16:42:38] [Sound Library Loader/INFO]: Starting up SoundSystem...
+[16:42:39] [Thread-3/INFO]: Initializing LWJGL OpenAL
+[16:42:39] [Thread-3/INFO]: (The LWJGL binding of OpenAL.  For more information, see http://www.lwjgl.org)
+ALSA lib confmisc.c:855:(parse_card) [error.core] cannot find card '0'
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) [error.core] error evaluating strings
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) [error.core] error evaluating name
+ALSA lib conf.c:5211:(_snd_config_evaluate) [error.core] function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5734:(snd_config_expand) [error.core] Evaluate error: No such file or directory
+ALSA lib pcm.c:2722:(snd_pcm_open_noupdate) [error.pcm] Unknown PCM default
+AL lib: (EE) alsa_open_playback: Could not open playback device 'default': No such file or directory
+[16:42:39] [Thread-3/ERROR]: Error in class 'LibraryLWJGLOpenAL'
+[16:42:39] [Thread-3/ERROR]: Unable to initialize OpenAL.  Probable cause: OpenAL not supported.
+[16:42:39] [Thread-3/WARN]: ERROR MESSAGE:
+[16:42:39] [Thread-3/INFO]: Could not locate OpenAL library.
+[16:42:39] [Thread-3/WARN]: STACK TRACE:
+[16:42:39] [Thread-3/INFO]: org.lwjgl.openal.AL.create(AL.java:156)
+[16:42:39] [Thread-3/INFO]: org.lwjgl.openal.AL.create(AL.java:102)
+[16:42:39] [Thread-3/INFO]: org.lwjgl.openal.AL.create(AL.java:206)
+[16:42:39] [Thread-3/INFO]: paulscode.sound.libraries.LibraryLWJGLOpenAL.init(LibraryLWJGLOpenAL.java:164)
+[16:42:39] [Thread-3/INFO]: paulscode.sound.SoundSystem.CommandNewLibrary(SoundSystem.java:1576)
+[16:42:39] [Thread-3/INFO]: paulscode.sound.SoundSystem.CommandQueue(SoundSystem.java:2572)
+[16:42:39] [Thread-3/INFO]: paulscode.sound.CommandThread.run(CommandThread.java:121)
+[16:42:39] [Sound Library Loader/WARN]: ERROR MESSAGE:
+[16:42:39] [Sound Library Loader/INFO]: Could not locate OpenAL library.
+[16:42:39] [Sound Library Loader/INFO]: Starting up SoundSystem...
+[16:42:39] [Thread-5/INFO]: Switching to No Sound
+[16:42:39] [Thread-5/INFO]: (Silent Mode)
+[16:42:40] [Sound Library Loader/INFO]: Sound engine started
+[16:42:40] [Client thread/INFO]: Created: 1024x512 textures-atlas
+[16:42:41] [Client thread/WARN]: ERROR : Couldn't load Narrator library : Unable to load library 'fliteWrapper': Native library (linux-x86-64/libfliteWrapper.so) not found in resource path ([file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/mojang/patchy/1.3.9/patchy-1.3.9.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/oshi-project/oshi-core/1.1/oshi-core-1.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/java/dev/jna/jna/4.4.0/jna-4.4.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/java/dev/jna/platform/3.4.0/platform-3.4.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/ibm/icu/icu4j-core-mojang/51.2/icu4j-core-mojang-51.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/sf/jopt-simple/jopt-simple/5.0.3/jopt-simple-5.0.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/paulscode/codecjorbis/20101023/codecjorbis-20101023.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/paulscode/codecwav/20101023/codecwav-20101023.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/paulscode/libraryjavasound/20101123/libraryjavasound-20101123.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/paulscode/librarylwjglopenal/20100824/librarylwjglopenal-20100824.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/paulscode/soundsystem/20120107/soundsystem-20120107.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/io/netty/netty-all/4.1.9.Final/netty-all-4.1.9.Final.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/google/guava/guava/21.0/guava-21.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/commons-io/commons-io/2.5/commons-io-2.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/commons-codec/commons-codec/1.10/commons-codec-1.10.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/mojang/authlib/1.5.25/authlib-1.5.25.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/mojang/realms/1.10.22/realms-1.10.22.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/it/unimi/dsi/fastutil/7.1.0/fastutil-7.1.0.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/logging/log4j/log4j-api/2.8.1/log4j-api-2.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/apache/logging/log4j/log4j-core/2.8.1/log4j-core-2.8.1.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl/2.9.4-nightly-20150209/lwjgl-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl_util/2.9.4-nightly-20150209/lwjgl_util-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/org/lwjgl/lwjgl/lwjgl-platform/2.9.4-nightly-20150209/lwjgl-platform-2.9.4-nightly-20150209.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/net/java/jinput/jinput-platform/2.0.5/jinput-platform-2.0.5.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/libraries/com/mojang/text2speech/1.10.3/text2speech-1.10.3.jar, file:/home/runner/work/_temp/hrc-vanilla-1.12.2/shared/versions/1.12.2/1.12.2.jar])
+[16:42:41] [Realms Notification Availability checker #1/INFO]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
