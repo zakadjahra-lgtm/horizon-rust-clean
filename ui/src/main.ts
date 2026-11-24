@@ -12,7 +12,8 @@ interface ClientProfile {
   mods: Record<string, { enabled: boolean; x: number; y: number }>;
 }
 interface VersionInfo { id: string; kind: string }
-interface Settings { username: string; default_ram_mb: number; java_path: string | null; curseforge_key?: string | null }
+interface ExtClient { id: string; name: string; exe: string | null }
+interface Settings { username: string; default_ram_mb: number; java_path: string | null; curseforge_key?: string | null; ext_clients?: ExtClient[] }
 interface Prog { phase: string; done: number; total: number; files_done: number; files_total: number; speed: number }
 interface ConsoleLine { id: string; err: boolean; line: string; sys?: boolean }
 interface JavaInfo { installed: string[]; manual: string | null; data_dir: string }
@@ -35,7 +36,7 @@ const LOADERS: { id: string; label: string; hint: string; hidden?: boolean }[] =
   { id: 'neoforge', label: 'NeoForge', hint: 'NeoForge supports Minecraft 1.20.2 and newer.' },
   { id: 'rusttools', hidden: true, label: 'Horizon (Rust tools)', hint: 'Original Minecraft (Java), any version. No mods and nothing injected into the game. The launcher (Rust) adds an optional performance preset and tools: log cleaner, crash cleaner, screenshot sorter.' },
   { id: 'rust', hidden: true, label: 'Horizon Rust (experimental)', hint: 'A native game written in Rust — NOT Minecraft. No Java, no Minecraft versions, no mods. Fly over a generated block world. Early prototype.' },
-  { id: 'horizon', label: 'Rust', hint: 'Our clean client. HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
+  { id: 'horizon', label: 'Horizon Client', hint: 'Our clean client. HUD modules work on 1.8–1.12.2; newer versions run on a Fabric base. All modules start OFF.' },
 ];
 // الإدخالان المخفيان لا يظهران في القوائم؛ تبقى المعرّفات حتى لا تتعطل instances قديمة.
 const SHOWN = LOADERS.filter((l) => !l.hidden);
@@ -179,6 +180,7 @@ function renderHome(): HTMLElement {
       h('h2', {}, 'Welcome to MClauncher'),
       h('p', { class: 'muted' }, 'Create an instance (a Minecraft version with its own folder and settings) to get started.'),
       h('button', { class: 'btn primary', onclick: () => go('instances') }, 'Create instance')));
+    wrap.append(clientsSection());
     return wrap;
   }
   const sel = h('select', {
@@ -194,6 +196,116 @@ function renderHome(): HTMLElement {
     h('p', { class: 'muted' }, (isRust(inst) ? `Native Rust game (not Minecraft) · ${settings.username}` : `Minecraft ${inst.version_id} · ${inst.max_memory_mb} MB RAM · ${settings.username} (offline)`)),
     h('button', { class: 'play', disabled: isRun || isInst, onclick: () => { void startPlay(inst.id); } }, label),
     progressBlock()));
+  wrap.append(clientsSection());
+  return wrap;
+}
+
+// ───────────── Clients: كل كلاينت منفصل عن instances جافا العادية وعن محرك Rust ─────────────
+// الكلاينتات الخارجية (Badlion / Lunar / مخصص) يملك لانشرها الرسمي إصداراتها ومودّاتها وHUD؛ نحن نحفظ
+// مسار برنامجها فقط ونشغّله. بدون شعارات: أسماء فقط.
+const EXT_PRESETS: { id: string; name: string; about: string }[] = [
+  { id: 'badlion', name: 'Badlion Client', about: 'Install it from its official page, then choose its program here.' },
+  { id: 'lunar', name: 'Lunar Client', about: 'Install it from its official page, then choose its program here.' },
+];
+
+function clientsSection(): HTMLElement {
+  const sec = h('div', {}, h('h2', { style: 'margin:22px 0 10px' }, 'Clients'),
+    h('p', { class: 'muted', style: 'margin-top:0' }, 'Each client has its own files. Minecraft instances above and the Rust Engine page are separate systems.'));
+  const grid = h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px' });
+  const tile = (name: string): HTMLElement => h('div', { style: 'width:44px;height:44px;border-radius:10px;background:var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none' }, name.slice(0, 1).toUpperCase());
+
+  // Horizon Client (لنا): instances من نوع horizon، لكل واحد إصداره ومجلده ومودّاته وHUD.
+  const hz = instances.filter((i) => i.loader === 'horizon');
+  const hzSel = h('select', { class: 'input', style: 'width:100%' },
+    ...hz.map((i) => h('option', { value: i.id }, `${i.name} — ${i.version_id}`))) as HTMLSelectElement;
+  const first = hz.find((i) => i.id === selected) ?? hz[0];
+  if (first) hzSel.value = first.id;
+  const hzInst = (): Instance | undefined => hz.find((i) => i.id === hzSel.value);
+  grid.append(h('div', { class: 'card', style: 'margin:0' },
+    h('div', { class: 'row' }, tile('Horizon Client'), h('div', {}, h('strong', {}, 'Horizon Client'),
+      h('div', { class: 'muted', style: 'font-size:12px' }, 'HUD: FPS, CPS, keystrokes (all off by default)'))),
+    hz.length ? h('div', { style: 'margin-top:10px' }, hzSel) : h('p', { class: 'muted' }, 'No Horizon Client instance yet.'),
+    h('div', { class: 'row', style: 'margin-top:10px' },
+      hz.length ? h('span', { class: 'badge ' + (first?.installed ? 'ok' : '') }, first?.installed ? 'installed' : 'not installed') : null,
+      hz.length
+        ? h('button', { class: 'btn primary', disabled: running.has(hzSel.value) || installing.has(hzSel.value), onclick: () => { void startPlay(hzSel.value); } },
+          hzInst()?.installed ? 'Play' : 'Install & play')
+        : h('button', { class: 'btn', onclick: () => { filterLoader = 'horizon'; go('instances'); } }, 'Create'))));
+
+  // كلاينتات خارجية: البطاقات المعروفة + المخصصة التي أضافها المستخدم.
+  const saved = settings.ext_clients ?? [];
+  const list: ExtClient[] = [...EXT_PRESETS.map((p) => saved.find((c) => c.id === p.id) ?? { id: p.id, name: p.name, exe: null }),
+    ...saved.filter((c) => !EXT_PRESETS.some((p) => p.id === c.id))];
+  const persist = async (next: ExtClient[]): Promise<void> => {
+    await invoke('save_ext_clients', { clients: next });
+    settings = { ...settings, ext_clients: next }; render();
+  };
+  for (const c of list) {
+    const preset = EXT_PRESETS.find((p) => p.id === c.id);
+    const exe = h('input', { class: 'input', placeholder: 'Path to the client\'s program (.exe)', value: c.exe ?? '', style: 'width:100%' }) as HTMLInputElement;
+    const upsert = (): ExtClient[] => [...saved.filter((x) => x.id !== c.id), { ...c, exe: exe.value.trim() || null }];
+    grid.append(h('div', { class: 'card', style: 'margin:0' },
+      h('div', { class: 'row' }, tile(c.name), h('div', {}, h('strong', {}, c.name),
+        h('div', { class: 'muted', style: 'font-size:12px' }, preset ? preset.about : 'Custom client'))),
+      h('div', { style: 'margin-top:10px' }, exe),
+      h('div', { class: 'row', style: 'margin-top:10px' },
+        h('span', { class: 'badge ' + (c.exe ? 'ok' : '') }, c.exe ? 'set' : 'not installed'),
+        h('button', { class: 'btn', onclick: async () => { try { await persist(upsert()); toast('Saved'); } catch (e) { toast(errMsg(e), true); } } }, 'Save'),
+        h('button', { class: 'btn primary', disabled: !c.exe || running.has('client-' + c.id), onclick: async () => {
+          try { await invoke('launch_ext_client', { id: c.id }); } catch (e) { toast(errMsg(e), true); }
+        } }, running.has('client-' + c.id) ? 'Running' : 'Play'),
+        preset ? h('button', { class: 'btn', onclick: () => { void invoke('open_client_site', { id: c.id }); } }, 'Official page') : h('button', { class: 'btn', onclick: () => { void persist(saved.filter((x) => x.id !== c.id)); } }, 'Remove'))));
+  }
+  // إضافة كلاينت مخصص
+  const newName = h('input', { class: 'input', placeholder: 'Custom client name', style: 'width:100%' }) as HTMLInputElement;
+  grid.append(h('div', { class: 'card', style: 'margin:0' }, h('strong', {}, 'Custom client'),
+    h('div', { style: 'margin-top:10px' }, newName),
+    h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => {
+      const name = newName.value.trim();
+      if (!name) { toast('Enter a name', true); return; }
+      void persist([...saved, { id: 'custom-' + Date.now().toString(36), name, exe: null }]);
+    } }, 'Add'))));
+  sec.append(grid);
+  return sec;
+}
+
+// ───────────── Rust Engine: صفحة ونظام مستقلان (ليس كلاينت جافا) ─────────────
+interface RustInfo { available: boolean; dir: string; props: { seed: number; radius: number; vsync: boolean }; has_world: boolean }
+
+function renderRustEngine(): HTMLElement {
+  const wrap = h('div', {}, h('h1', {}, 'Rust Engine'),
+    h('p', { class: 'muted' }, 'A native game written in Rust. It is not Minecraft and not a Java client: it has its own files, settings and world, separate from Minecraft instances and from the clients on the Play page.'));
+  const body = h('div', {}, h('span', { class: 'muted' }, 'Loading…'));
+  wrap.append(body);
+  void (async () => {
+    const info: RustInfo = await invoke('rust_engine_info');
+    const seed = h('input', { class: 'input', type: 'number', value: info.props.seed, style: 'width:140px' }) as HTMLInputElement;
+    const radius = h('input', { class: 'input', type: 'number', min: 1, max: 16, value: info.props.radius, style: 'width:90px' }) as HTMLInputElement;
+    const vsync = h('input', { type: 'checkbox', checked: info.props.vsync }) as HTMLInputElement;
+    const save = async (): Promise<void> => {
+      await invoke('rust_engine_save', { props: { seed: Math.max(0, Math.floor(Number(seed.value) || 0)), radius: Math.min(16, Math.max(1, Math.floor(Number(radius.value) || 8))), vsync: vsync.checked } });
+    };
+    const isRun = running.has('rust-engine');
+    body.replaceChildren(
+      h('div', { class: 'card' },
+        h('div', { class: 'row' }, h('strong', {}, 'Engine'), h('span', { class: 'badge ' + (info.available ? 'ok' : '') }, info.available ? 'installed' : 'not installed')),
+        h('p', { class: 'muted' }, 'Version: Prototype (the only one). Minecraft versions do not apply here; other Rust versions are not available yet.'),
+        h('button', { class: 'play', disabled: !info.available || isRun, onclick: async () => {
+          try { await save(); await invoke('rust_engine_launch'); } catch (e) { toast(errMsg(e), true); }
+          render();
+        } }, isRun ? 'RUNNING' : 'LAUNCH RUST')),
+      h('div', { class: 'card' }, h('h2', {}, 'Graphics settings'),
+        h('div', { class: 'row' }, h('span', { class: 'muted' }, 'World seed'), seed,
+          h('span', { class: 'muted' }, 'View radius (chunks, 1–16)'), radius,
+          h('label', { class: 'chk' }, vsync, 'VSync')),
+        h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: async () => { try { await save(); toast('Saved'); } catch (e) { toast(errMsg(e), true); } } }, 'Save'))),
+      h('div', { class: 'card' }, h('h2', {}, 'World files'),
+        h('p', { class: 'muted' }, info.has_world ? 'A saved world exists.' : 'No saved world yet (created when you play and quit).'),
+        h('p', { class: 'muted', style: 'word-break:break-all' }, info.dir),
+        h('button', { class: 'btn', onclick: () => { void invoke('open_rust_engine_folder'); } }, 'Open folder')),
+      h('div', { class: 'card' }, h('h2', {}, 'Horizon mods'),
+        h('p', { class: 'muted', style: 'margin-bottom:0' }, 'Not available in this prototype. Horizon\'s own mod system (.hmod / .hnmod) belongs to the real Horizon engine (the rust-clean fork), not to this prototype game. Fabric, Forge and NeoForge mods never run on a Rust engine.')));
+  })().catch((e) => { body.replaceChildren(h('span', { class: 'muted' }, errMsg(e))); });
   return wrap;
 }
 
@@ -622,7 +734,7 @@ function render(): void {
   document.querySelectorAll('.nav button').forEach((b) =>
     b.classList.toggle('active', (b as HTMLElement).dataset.page === (page === 'content' ? 'instances' : page)));
   const pages: Record<string, () => HTMLElement> = {
-    home: renderHome, instances: renderInstances, browse: renderBrowse, downloads: renderDownloads,
+    home: renderHome, instances: renderInstances, browse: renderBrowse, rust: renderRustEngine, downloads: renderDownloads,
     java: renderJava, console: renderConsole, settings: renderSettings, content: renderContent,
   };
   view.replaceChildren((pages[page] ?? renderHome)());
@@ -633,12 +745,12 @@ function go(p: string): void { page = p; render(); }
 
 listen('progress', (p: Prog) => { prog = p; updateProgress(); });
 listen('console', (c: ConsoleLine) => pushLog(c));
-listen('game-started', (e: any) => { running.add(e.id); sys('Game started'); if (page === 'home' || page === 'instances') render(); });
+listen('game-started', (e: any) => { running.add(e.id); sys('Game started'); if (page === 'home' || page === 'instances' || page === 'rust') render(); });
 listen('game-exit', (e: any) => {
   running.delete(e.id);
   sys(`Game exited (code ${e.code ?? 'unknown'})`);
   if (!e.ok) toast(`Game exited with code ${e.code ?? 'unknown'} — see Console`, true);
-  if (page === 'home' || page === 'instances') render();
+  if (page === 'home' || page === 'instances' || page === 'rust') render();
 });
 
 async function init(): Promise<void> {

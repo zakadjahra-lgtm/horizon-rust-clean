@@ -323,6 +323,94 @@ fn open_path(p: &Path) -> Result<(), String> {
 }
 
 // ───────────── أوامر الواجهة ─────────────
+// ───────────── محرك Rust: نظام مستقل عن instances جافا ─────────────
+
+#[derive(serde::Serialize)]
+struct RustEngineInfo {
+    available: bool,
+    dir: String,
+    props: hrc_core::rust_engine::Props,
+    has_world: bool,
+}
+
+#[tauri::command]
+fn rust_engine_info(st: State<'_, AppState>) -> RustEngineInfo {
+    RustEngineInfo {
+        available: rust_game_exe().is_some(),
+        dir: hrc_core::rust_engine::dir(&st.data).to_string_lossy().into_owned(),
+        props: hrc_core::rust_engine::load(&st.data),
+        has_world: hrc_core::rust_engine::has_world(&st.data),
+    }
+}
+
+#[tauri::command]
+fn rust_engine_save(st: State<'_, AppState>, props: hrc_core::rust_engine::Props) -> Result<(), String> {
+    hrc_core::rust_engine::save(&st.data, &props).map_err(es)
+}
+
+#[tauri::command]
+async fn rust_engine_launch(app: AppHandle, st: State<'_, AppState>) -> Result<(), String> {
+    let exe = rust_game_exe().ok_or("horizon-rust-game was not found next to the app (reinstall MClauncher)")?;
+    let gd = hrc_core::rust_engine::dir(&st.data);
+    std::fs::create_dir_all(&gd).map_err(es)?;
+    let user = settings::load(&st.data).username;
+    let cmd = LaunchCommand { program: exe, args: vec!["--dir".into(), gd.to_string_lossy().into_owned(), "--user".into(), user], working_dir: gd };
+    let _ = app.emit("console", ConsoleLine { id: "rust-engine".into(), err: false, line: "[launcher] Rust Engine (native Rust game, no Java)".into() });
+    spawn_and_track(&app, "rust-engine", cmd).await
+}
+
+#[tauri::command]
+fn open_rust_engine_folder(st: State<'_, AppState>) -> Result<(), String> {
+    open_path(&hrc_core::rust_engine::dir(&st.data))
+}
+
+// ───────────── كلاينتات خارجية (Badlion / Lunar / مخصص) ─────────────
+
+/// صفحات التنزيل الرسمية الثابتة للكلاينتات المعروفة؛ لا نفتح أي رابط غير هذه.
+fn client_site(id: &str) -> Option<&'static str> {
+    match id {
+        "badlion" => Some("https://client.badlion.net/"),
+        "lunar" => Some("https://www.lunarclient.com/download"),
+        _ => None,
+    }
+}
+
+fn open_url(url: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    let mut c = { let mut c = std::process::Command::new("cmd"); c.args(["/C", "start", ""]).arg(url); c };
+    #[cfg(target_os = "macos")]
+    let mut c = { let mut c = std::process::Command::new("open"); c.arg(url); c };
+    #[cfg(all(unix, not(target_os = "macos")))]
+    let mut c = { let mut c = std::process::Command::new("xdg-open"); c.arg(url); c };
+    c.spawn().map(|_| ()).map_err(es)
+}
+
+#[tauri::command]
+fn open_client_site(id: String) -> Result<(), String> {
+    open_url(client_site(&id).ok_or("No official page for this client")?)
+}
+
+#[tauri::command]
+fn save_ext_clients(st: State<'_, AppState>, clients: Vec<settings::ExtClient>) -> Result<(), String> {
+    let mut s = settings::load(&st.data);
+    s.ext_clients = clients;
+    settings::save(&st.data, &s).map_err(es)
+}
+
+/// يشغّل البرنامج الذي اختاره المستخدم لهذا الكلاينت (لانشره الرسمي). ننفّذ ملفاً موجوداً فقط.
+#[tauri::command]
+async fn launch_ext_client(app: AppHandle, st: State<'_, AppState>, id: String) -> Result<(), String> {
+    let s = settings::load(&st.data);
+    let c = s.ext_clients.iter().find(|c| c.id == id).ok_or("Unknown client")?;
+    let exe = PathBuf::from(c.exe.as_deref().filter(|p| !p.trim().is_empty()).ok_or("Choose the client's program first")?);
+    if !exe.is_file() {
+        return Err(format!("File not found: {}", exe.display()));
+    }
+    let wd = exe.parent().map(Path::to_path_buf).unwrap_or_default();
+    let _ = app.emit("console", ConsoleLine { id: format!("client-{id}"), err: false, line: format!("[launcher] starting {} ({})", c.name, exe.display()) });
+    spawn_and_track(&app, &format!("client-{id}"), LaunchCommand { program: exe, args: Vec::new(), working_dir: wd }).await
+}
+
 
 #[tauri::command]
 async fn list_versions(st: State<'_, AppState>) -> Result<Vec<VersionInfo>, String> {
@@ -560,6 +648,13 @@ fn main() {
             open_content_folder,
             get_client_profile,
             save_client_profile,
+            rust_engine_info,
+            rust_engine_save,
+            rust_engine_launch,
+            open_rust_engine_folder,
+            open_client_site,
+            save_ext_clients,
+            launch_ext_client,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MClauncher");

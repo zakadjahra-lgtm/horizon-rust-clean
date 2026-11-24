@@ -3,6 +3,7 @@
 
 pub mod content;
 pub mod curseforge;
+pub mod rust_engine;
 pub mod download;
 pub mod install;
 pub mod instance;

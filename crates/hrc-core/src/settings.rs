@@ -12,11 +12,21 @@ pub struct Settings {
     pub java_path: Option<String>,
     /// مفتاح CurseForge API الخاص بالمستخدم (اختياري). يُحفظ في settings.json المحلي فقط.
     pub curseforge_key: Option<String>,
+    /// كلاينتات خارجية (Badlion/Lunar أو مخصصة): لانشراتها الرسمية ملفاتها وإصداراتها ومودّاتها عندها.
+    pub ext_clients: Vec<ExtClient>,
+}
+
+/// كلاينت خارجي: نحفظ فقط اسمه ومسار برنامجه الذي اختاره المستخدم.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExtClient {
+    pub id: String,
+    pub name: String,
+    pub exe: Option<String>,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { username: "Player".into(), default_ram_mb: 2048, java_path: None, curseforge_key: None }
+        Self { username: "Player".into(), default_ram_mb: 2048, java_path: None, curseforge_key: None, ext_clients: Vec::new() }
     }
 }
 
@@ -61,7 +71,7 @@ mod tests {
     fn save_and_load_roundtrip() {
         let d = std::env::temp_dir().join(format!("hrc-set-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
-        let s = Settings { username: "Alex".into(), default_ram_mb: 100, java_path: Some("  ".into()), curseforge_key: Some(" k1 ".into()) };
+        let s = Settings { username: "Alex".into(), default_ram_mb: 100, java_path: Some("  ".into()), curseforge_key: Some(" k1 ".into()), ext_clients: Vec::new() };
         save(&d, &s).unwrap();
         let l = load(&d);
         assert_eq!((l.username.as_str(), l.default_ram_mb, l.java_path), ("Alex", 512, None));
